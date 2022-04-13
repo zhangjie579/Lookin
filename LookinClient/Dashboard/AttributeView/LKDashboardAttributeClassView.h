@@ -8,6 +8,7 @@
 
 #import "LKDashboardAttributeStringArrayView.h"
 
+/// 右边菜单栏, class模块的内容
 @interface LKDashboardAttributeClassView : LKDashboardAttributeStringArrayView
 
 @end

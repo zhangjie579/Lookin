@@ -154,6 +154,7 @@
 		AAF418C522BA2C9600111554 /* LKConsoleSelectPopoverItemControl.m in Sources */ = {isa = PBXBuildFile; fileRef = AAF418C422BA2C9600111554 /* LKConsoleSelectPopoverItemControl.m */; };
 		AAF418C822BA2D1300111554 /* LKImageTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = AAF418C722BA2D1300111554 /* LKImageTextView.m */; };
 		C186A79F2806C50F00B2F2B3 /* KcSwizzleHelp.m in Sources */ = {isa = PBXBuildFile; fileRef = C186A79E2806C50F00B2F2B3 /* KcSwizzleHelp.m */; };
+		C186A7A32806CE0800B2F2B3 /* KcSwiftTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = C186A7A22806CE0800B2F2B3 /* KcSwiftTool.swift */; };
 		D4052AC9235CBD090033C961 /* LKMeasureTutorialView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4052AC8235CBD090033C961 /* LKMeasureTutorialView.m */; };
 		D4052ACC235CE2300033C961 /* LKMeasureResultView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4052ACB235CE2300033C961 /* LKMeasureResultView.m */; };
 		D41874D4234B68AE004D68A2 /* LKDashboardAttributeOpenImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = D41874D3234B68AE004D68A2 /* LKDashboardAttributeOpenImageView.m */; };
@@ -491,6 +492,8 @@
 		AAF418C722BA2D1300111554 /* LKImageTextView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LKImageTextView.m; sourceTree = "<group>"; };
 		C186A79D2806C50E00B2F2B3 /* KcSwizzleHelp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KcSwizzleHelp.h; sourceTree = "<group>"; };
 		C186A79E2806C50F00B2F2B3 /* KcSwizzleHelp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KcSwizzleHelp.m; sourceTree = "<group>"; };
+		C186A7A12806CE0700B2F2B3 /* LookinClient-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LookinClient-Bridging-Header.h"; sourceTree = "<group>"; };
+		C186A7A22806CE0800B2F2B3 /* KcSwiftTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcSwiftTool.swift; sourceTree = "<group>"; };
 		D4052AC7235CBD090033C961 /* LKMeasureTutorialView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LKMeasureTutorialView.h; sourceTree = "<group>"; };
 		D4052AC8235CBD090033C961 /* LKMeasureTutorialView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LKMeasureTutorialView.m; sourceTree = "<group>"; };
 		D4052ACA235CE2300033C961 /* LKMeasureResultView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LKMeasureResultView.h; sourceTree = "<group>"; };
@@ -717,6 +720,7 @@
 		AA48F29D21CC0CA50032EC2C /* LookinClient */ = {
 			isa = PBXGroup;
 			children = (
+				C186A7A02806CDEC00B2F2B3 /* KcTool */,
 				C186A79C2806C50000B2F2B3 /* KcDebug */,
 				A2B5537627F8BDD100FCA139 /* LookinServerFramework */,
 				AA6E0D8322E1D5BD00948877 /* Localizable.strings */,
@@ -1057,6 +1061,15 @@
 			path = KcDebug;
 			sourceTree = "<group>";
 		};
+		C186A7A02806CDEC00B2F2B3 /* KcTool */ = {
+			isa = PBXGroup;
+			children = (
+				C186A7A22806CE0800B2F2B3 /* KcSwiftTool.swift */,
+				C186A7A12806CE0700B2F2B3 /* LookinClient-Bridging-Header.h */,
+			);
+			path = KcTool;
+			sourceTree = "<group>";
+		};
 		D4224EF02358ED3A00ED9626 /* Measure */ = {
 			isa = PBXGroup;
 			children = (
@@ -1108,6 +1121,7 @@
 				TargetAttributes = {
 					AA48F29A21CC0CA50032EC2C = {
 						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1250;
 						SystemCapabilities = {
 							com.apple.HardenedRuntime = {
 								enabled = 1;
@@ -1306,6 +1320,7 @@
 				AAA9638D228428EE0047F707 /* NSPointerArray+LookinClient.m in Sources */,
 				AABEE3EC22970CCF0042EC5A /* LKMethodTraceMenuView.m in Sources */,
 				AAA8C14A21CC17680017A345 /* LKDashboardAttributeView.m in Sources */,
+				C186A7A32806CE0800B2F2B3 /* KcSwiftTool.swift in Sources */,
 				AA50755722A3E76A00D2A5AC /* LKInputSearchView.m in Sources */,
 				AA65ED492341FE8300F0BF34 /* LKTwoColors.m in Sources */,
 				AA39055123694D5D00CA7646 /* LKAboutViewController.m in Sources */,
@@ -1497,6 +1512,7 @@
 			baseConfigurationReference = 607BE4658FF90E8DCB8EC923 /* Pods-LookinClient.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LookinClient/Lookin.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
@@ -1521,6 +1537,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = hughkli.Lookin;
 				PRODUCT_NAME = Lookin;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "LookinClient/KcTool/LookinClient-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -1529,6 +1548,7 @@
 			baseConfigurationReference = FFDAAD6EFCBEBC7B6B348031 /* Pods-LookinClient.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LookinClient/Lookin.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
@@ -1553,6 +1573,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = hughkli.Lookin;
 				PRODUCT_NAME = Lookin;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "LookinClient/KcTool/LookinClient-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
