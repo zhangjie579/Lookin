@@ -153,6 +153,7 @@
 		AAF418C222BA2AF000111554 /* LKConsoleSelectPopoverController.m in Sources */ = {isa = PBXBuildFile; fileRef = AAF418C122BA2AF000111554 /* LKConsoleSelectPopoverController.m */; };
 		AAF418C522BA2C9600111554 /* LKConsoleSelectPopoverItemControl.m in Sources */ = {isa = PBXBuildFile; fileRef = AAF418C422BA2C9600111554 /* LKConsoleSelectPopoverItemControl.m */; };
 		AAF418C822BA2D1300111554 /* LKImageTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = AAF418C722BA2D1300111554 /* LKImageTextView.m */; };
+		C186A79F2806C50F00B2F2B3 /* KcSwizzleHelp.m in Sources */ = {isa = PBXBuildFile; fileRef = C186A79E2806C50F00B2F2B3 /* KcSwizzleHelp.m */; };
 		D4052AC9235CBD090033C961 /* LKMeasureTutorialView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4052AC8235CBD090033C961 /* LKMeasureTutorialView.m */; };
 		D4052ACC235CE2300033C961 /* LKMeasureResultView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4052ACB235CE2300033C961 /* LKMeasureResultView.m */; };
 		D41874D4234B68AE004D68A2 /* LKDashboardAttributeOpenImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = D41874D3234B68AE004D68A2 /* LKDashboardAttributeOpenImageView.m */; };
@@ -488,6 +489,8 @@
 		AAF418C422BA2C9600111554 /* LKConsoleSelectPopoverItemControl.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LKConsoleSelectPopoverItemControl.m; sourceTree = "<group>"; };
 		AAF418C622BA2D1300111554 /* LKImageTextView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LKImageTextView.h; sourceTree = "<group>"; };
 		AAF418C722BA2D1300111554 /* LKImageTextView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LKImageTextView.m; sourceTree = "<group>"; };
+		C186A79D2806C50E00B2F2B3 /* KcSwizzleHelp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KcSwizzleHelp.h; sourceTree = "<group>"; };
+		C186A79E2806C50F00B2F2B3 /* KcSwizzleHelp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KcSwizzleHelp.m; sourceTree = "<group>"; };
 		D4052AC7235CBD090033C961 /* LKMeasureTutorialView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LKMeasureTutorialView.h; sourceTree = "<group>"; };
 		D4052AC8235CBD090033C961 /* LKMeasureTutorialView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LKMeasureTutorialView.m; sourceTree = "<group>"; };
 		D4052ACA235CE2300033C961 /* LKMeasureResultView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LKMeasureResultView.h; sourceTree = "<group>"; };
@@ -714,6 +717,7 @@
 		AA48F29D21CC0CA50032EC2C /* LookinClient */ = {
 			isa = PBXGroup;
 			children = (
+				C186A79C2806C50000B2F2B3 /* KcDebug */,
 				A2B5537627F8BDD100FCA139 /* LookinServerFramework */,
 				AA6E0D8322E1D5BD00948877 /* Localizable.strings */,
 				AA48F2A921CC0CA60032EC2C /* Lookin.entitlements */,
@@ -1044,6 +1048,15 @@
 			path = WillShare;
 			sourceTree = "<group>";
 		};
+		C186A79C2806C50000B2F2B3 /* KcDebug */ = {
+			isa = PBXGroup;
+			children = (
+				C186A79D2806C50E00B2F2B3 /* KcSwizzleHelp.h */,
+				C186A79E2806C50F00B2F2B3 /* KcSwizzleHelp.m */,
+			);
+			path = KcDebug;
+			sourceTree = "<group>";
+		};
 		D4224EF02358ED3A00ED9626 /* Measure */ = {
 			isa = PBXGroup;
 			children = (
@@ -1188,6 +1201,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C186A79F2806C50F00B2F2B3 /* KcSwizzleHelp.m in Sources */,
 				AAA8C13A21CC17680017A345 /* LKStaticHierarchyController.m in Sources */,
 				AAEF2C112308420400CFAC53 /* LookinPreviewView.m in Sources */,
 				AA3D51AA2289E57C00E4E6B7 /* LKExportManager.m in Sources */,
@@ -1488,7 +1502,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 8;
-				DEVELOPMENT_TEAM = 5V3Z8FVWHU;
+				DEVELOPMENT_TEAM = WXH4S8VA6B;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1520,7 +1534,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 8;
-				DEVELOPMENT_TEAM = 5V3Z8FVWHU;
+				DEVELOPMENT_TEAM = WXH4S8VA6B;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

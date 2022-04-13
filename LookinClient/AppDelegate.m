@@ -16,6 +16,8 @@
 #import "NSString+Score.h"
 #import "LookinDashboardBlueprint.h"
 
+#import "KcSwizzleHelp.h"
+
 @interface AppDelegate ()
 
 @property(nonatomic, assign) BOOL launchedToOpenFile;
@@ -26,6 +28,8 @@
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification {
     [[LKAppMenuManager sharedInstance] setup];
+    
+//    [KcSwizzleHelp swizzle];
     
     [RACObserve([LKPreferenceManager mainManager], appearanceType) subscribeNext:^(NSNumber *number) {
         LookinPreferredAppeanranceType type = [number integerValue];
