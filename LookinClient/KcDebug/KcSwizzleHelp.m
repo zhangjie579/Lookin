@@ -42,6 +42,10 @@
 - (void)kc_setAttributedStringValue:(NSAttributedString *)attributedStringValue {
     NSLog(@"kc --- 2 %@", attributedStringValue);
     
+    if ([attributedStringValue.string containsString:@"lkj"]) {
+        NSLog(@"");
+    }
+    
     [self kc_setAttributedStringValue:attributedStringValue];
 }
 

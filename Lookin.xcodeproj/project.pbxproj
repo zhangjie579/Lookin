@@ -155,6 +155,8 @@
 		AAF418C822BA2D1300111554 /* LKImageTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = AAF418C722BA2D1300111554 /* LKImageTextView.m */; };
 		C186A79F2806C50F00B2F2B3 /* KcSwizzleHelp.m in Sources */ = {isa = PBXBuildFile; fileRef = C186A79E2806C50F00B2F2B3 /* KcSwizzleHelp.m */; };
 		C186A7A32806CE0800B2F2B3 /* KcSwiftTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = C186A7A22806CE0800B2F2B3 /* KcSwiftTool.swift */; };
+		C1A8039A2807F63A00C6D82F /* KcDashboardAttributeDebugMethodView.m in Sources */ = {isa = PBXBuildFile; fileRef = C1A803992807F63A00C6D82F /* KcDashboardAttributeDebugMethodView.m */; };
+		C1A803A22807FC8800C6D82F /* KcCustomAttributesGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = C1A803A02807FC8800C6D82F /* KcCustomAttributesGroup.m */; };
 		D4052AC9235CBD090033C961 /* LKMeasureTutorialView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4052AC8235CBD090033C961 /* LKMeasureTutorialView.m */; };
 		D4052ACC235CE2300033C961 /* LKMeasureResultView.m in Sources */ = {isa = PBXBuildFile; fileRef = D4052ACB235CE2300033C961 /* LKMeasureResultView.m */; };
 		D41874D4234B68AE004D68A2 /* LKDashboardAttributeOpenImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = D41874D3234B68AE004D68A2 /* LKDashboardAttributeOpenImageView.m */; };
@@ -494,6 +496,10 @@
 		C186A79E2806C50F00B2F2B3 /* KcSwizzleHelp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KcSwizzleHelp.m; sourceTree = "<group>"; };
 		C186A7A12806CE0700B2F2B3 /* LookinClient-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LookinClient-Bridging-Header.h"; sourceTree = "<group>"; };
 		C186A7A22806CE0800B2F2B3 /* KcSwiftTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KcSwiftTool.swift; sourceTree = "<group>"; };
+		C1A803982807F63A00C6D82F /* KcDashboardAttributeDebugMethodView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcDashboardAttributeDebugMethodView.h; sourceTree = "<group>"; };
+		C1A803992807F63A00C6D82F /* KcDashboardAttributeDebugMethodView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDashboardAttributeDebugMethodView.m; sourceTree = "<group>"; };
+		C1A803A02807FC8800C6D82F /* KcCustomAttributesGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KcCustomAttributesGroup.m; sourceTree = "<group>"; };
+		C1A803A12807FC8800C6D82F /* KcCustomAttributesGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KcCustomAttributesGroup.h; sourceTree = "<group>"; };
 		D4052AC7235CBD090033C961 /* LKMeasureTutorialView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LKMeasureTutorialView.h; sourceTree = "<group>"; };
 		D4052AC8235CBD090033C961 /* LKMeasureTutorialView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LKMeasureTutorialView.m; sourceTree = "<group>"; };
 		D4052ACA235CE2300033C961 /* LKMeasureResultView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LKMeasureResultView.h; sourceTree = "<group>"; };
@@ -605,6 +611,8 @@
 				AA05CCD6221ED5E80086CDD1 /* LKDashboardAttributeSwitchView.m */,
 				AAA8C0E021CC17680017A345 /* LKDashboardAttributeView.h */,
 				AAA8C0EF21CC17680017A345 /* LKDashboardAttributeView.m */,
+				C1A803982807F63A00C6D82F /* KcDashboardAttributeDebugMethodView.h */,
+				C1A803992807F63A00C6D82F /* KcDashboardAttributeDebugMethodView.m */,
 			);
 			path = AttributeView;
 			sourceTree = "<group>";
@@ -934,6 +942,7 @@
 		AAA8C0D621CC17680017A345 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				C1A8039F2807FC8800C6D82F /* Custom */,
 				AAB65C0D2320FCFA001E4299 /* Search */,
 				AA05CCD1221ED50B0086CDD1 /* AttributeView */,
 				AAA8C0DA21CC17680017A345 /* LKDashboardCardView.h */,
@@ -1068,6 +1077,15 @@
 				C186A7A12806CE0700B2F2B3 /* LookinClient-Bridging-Header.h */,
 			);
 			path = KcTool;
+			sourceTree = "<group>";
+		};
+		C1A8039F2807FC8800C6D82F /* Custom */ = {
+			isa = PBXGroup;
+			children = (
+				C1A803A12807FC8800C6D82F /* KcCustomAttributesGroup.h */,
+				C1A803A02807FC8800C6D82F /* KcCustomAttributesGroup.m */,
+			);
+			path = Custom;
 			sourceTree = "<group>";
 		};
 		D4224EF02358ED3A00ED9626 /* Measure */ = {
@@ -1228,6 +1246,7 @@
 				A26EF69827F89F83005A9E4E /* ShortCocoa+Layout.m in Sources */,
 				AAED8ED822AFED490051242B /* LKDashboardAttributeSizeView.m in Sources */,
 				AAA8C12821CC17680017A345 /* LKBaseViewController.m in Sources */,
+				C1A803A22807FC8800C6D82F /* KcCustomAttributesGroup.m in Sources */,
 				AA05CCD7221ED5E80086CDD1 /* LKDashboardAttributeSwitchView.m in Sources */,
 				AAA8C12021CC17680017A345 /* LKNavigationManager.m in Sources */,
 				AA48F2A821CC0CA60032EC2C /* main.m in Sources */,
@@ -1300,6 +1319,7 @@
 				AA98EC9C22270B800083348D /* LKPreferencePopupView.m in Sources */,
 				D4E1FD66236169130070DFB8 /* LKMeasureResultLineData.m in Sources */,
 				AA8CFE212296DD5300B98BA2 /* LKMethodTraceWindowController.m in Sources */,
+				C1A8039A2807F63A00C6D82F /* KcDashboardAttributeDebugMethodView.m in Sources */,
 				AAA8C12421CC17680017A345 /* ShortCocoa+LookinClient.m in Sources */,
 				AA8133F022AFAEA1000A9D40 /* LKDashboardAttributePointView.m in Sources */,
 				AAA8C14621CC17680017A345 /* LKDashboardCardView.m in Sources */,

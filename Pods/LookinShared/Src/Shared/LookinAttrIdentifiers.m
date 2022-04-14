@@ -31,6 +31,9 @@ LookinAttrGroupIdentifier const LookinAttrGroup_UITextView = @"te";
 LookinAttrGroupIdentifier const LookinAttrGroup_UITextField = @"tf";
 LookinAttrGroupIdentifier const LookinAttrGroup_UIVisualEffectView = @"ve";
 
+/// 调试方法
+LookinAttrGroupIdentifier const LookinAttrGroup_KcDebugMethod = @"debugMethod";
+
 
 #pragma mark - Section
 
@@ -119,6 +122,10 @@ LookinAttrSectionIdentifier const LookinAttrSec_UITextField_ClearButtonMode = @"
 
 LookinAttrSectionIdentifier const LookinAttrSec_UIVisualEffectView_Style = @"ve_s";
 LookinAttrSectionIdentifier const LookinAttrSec_UIVisualEffectView_QMUIForegroundColor = @"ve_f";
+
+
+
+LookinAttrSectionIdentifier const LookinAttrSec_KcDebugMethod_Class = @"cl_debugMethod";
 
 #pragma mark - Attr
 
@@ -231,3 +238,8 @@ LookinAttrIdentifier const LookinAttr_UITextField_ClearButtonMode_Mode = @"tf_cb
 
 LookinAttrIdentifier const LookinAttr_UIVisualEffectView_Style_Style = @"ve_s_s";
 LookinAttrIdentifier const LookinAttr_UIVisualEffectView_QMUIForegroundColor_Color = @"ve_f_c";
+
+#pragma mark - 自定义扩展的Attr
+
+/// debug方法的说明
+LookinAttrIdentifier const LookinAttr_Kc_Debug_methodDesc = @"kc_debug_methodDesc";

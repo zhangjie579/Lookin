@@ -8,4 +8,9 @@ target 'LookinClient' do
     pod 'Sparkle', '~> 1.0'
     pod 'LookinShared', :git=>'https://github.com/QMUI/LookinServer.git', :branch => 'develop'
     #pod 'LookinShared', :path=>'../LookinServer/'
+    
+#    pod 'LookinShared', :git=>'https://github.com/zhangjie579/LookinServer', :branch => 'personal/samzj'
+
+#    pod 'LookinShared', :path=>'../'
+    
 end

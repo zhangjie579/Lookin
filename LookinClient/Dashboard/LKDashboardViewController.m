@@ -22,6 +22,7 @@
 #import "LKDashboardSectionView.h"
 #import "LKDashboardSearchMethodsView.h"
 #import "LKDashboardSearchMethodsDataSource.h"
+#import "KcCustomAttributesGroup.h"
 
 @interface LKDashboardViewController () <LKDashboardCardViewDelegate, LKDashboardSearchInputViewDelegate, LKDashboardSearchPropViewDelegate, LKDashboardSearchMethodsViewDelegate>
 
@@ -177,7 +178,10 @@
 }
 
 - (void)reloadWithGroupList:(NSArray<LookinAttributesGroup *> *)list {
-    if (list.count > 0) {
+    NSMutableArray<LookinAttributesGroup *> *attributesGroup = [[NSMutableArray alloc] initWithArray:list ?: @[]];
+    [attributesGroup addObjectsFromArray:[KcCustomAttributesGroup addCustomAttributesGroup]];
+    
+    if (attributesGroup.count > 0) {
         self.scrollView.hidden = NO;
     } else {
         self.scrollView.hidden = YES;
@@ -186,7 +190,7 @@
     
     NSMutableArray<LKDashboardCardView *> *needlessViews = [self.cardViews allValues].mutableCopy;
     
-    [list enumerateObjectsUsingBlock:^(LookinAttributesGroup * _Nonnull group, NSUInteger idx, BOOL * _Nonnull stop) {
+    [attributesGroup enumerateObjectsUsingBlock:^(LookinAttributesGroup * _Nonnull group, NSUInteger idx, BOOL * _Nonnull stop) {
         LKDashboardCardView *cardView = self.cardViews[group.identifier];
         if (cardView) {
             [needlessViews removeObject:cardView];

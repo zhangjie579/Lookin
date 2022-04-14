@@ -24,6 +24,7 @@
 #import "LKDashboardAttributeTextView.h"
 #import "LKPreferenceManager.h"
 #import "LKDashboardAttributeOpenImageView.h"
+#import "KcDashboardAttributeDebugMethodView.h"
 
 @interface LKDashboardSectionView ()
 
@@ -257,6 +258,8 @@
                 return [LKDashboardAttributeOpenImageView class];
             } else if ([identifier isEqualToString:LookinAttr_UIVisualEffectView_Style_Style]) {
                 return [LKDashboardAttributeEnumsView class];
+            } else if ([identifier isEqualToString:LookinAttr_Kc_Debug_methodDesc]) {
+                return [KcDashboardAttributeDebugMethodView class];
             } else {
                 NSAssert(NO, @"");
                 return nil;

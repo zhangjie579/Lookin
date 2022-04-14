@@ -286,7 +286,8 @@
                  LookinAttrGroup_UITableView: NSImageMake(@"dashboard_tableview"),
                  LookinAttrGroup_UITextView: NSImageMake(@"dashboard_textview"),
                  LookinAttrGroup_UITextField: NSImageMake(@"dashboard_textfield"),
-                 LookinAttrGroup_UIVisualEffectView: NSImageMake(@"dashboard_effectview")
+                 LookinAttrGroup_UIVisualEffectView: NSImageMake(@"dashboard_effectview"),
+                 LookinAttrGroup_KcDebugMethod: NSImageMake(@"icon_3d"),
                  };
     });
     NSImage *image = dict[identifier];

@@ -30,7 +30,9 @@
                   LookinAttrGroup_UIScrollView,
                   LookinAttrGroup_UITableView,
                   LookinAttrGroup_UITextView,
-                  LookinAttrGroup_UITextField
+                  LookinAttrGroup_UITextField,
+                  // 调试方法
+                  LookinAttrGroup_KcDebugMethod,
                   ];
     });
     return array;
@@ -130,6 +132,8 @@
                                                 LookinAttrSec_UITextField_CanAdjustFont,
                                                 LookinAttrSec_UITextField_ClearButtonMode],
                  
+                 
+                 LookinAttrGroup_KcDebugMethod: @[LookinAttrSec_KcDebugMethod_Class],
                  };
     });
     return dict[groupID];
@@ -295,7 +299,9 @@
                  LookinAttrSec_UITextField_CanAdjustFont: @[LookinAttr_UITextField_CanAdjustFont_CanAdjustFont,
                                                             LookinAttr_UITextField_CanAdjustFont_MinSize],
                  
-                 LookinAttrSec_UITextField_ClearButtonMode: @[LookinAttr_UITextField_ClearButtonMode_Mode]
+                 LookinAttrSec_UITextField_ClearButtonMode: @[LookinAttr_UITextField_ClearButtonMode_Mode],
+                 
+                 LookinAttrSec_KcDebugMethod_Class: @[LookinAttr_Kc_Debug_methodDesc],
                  };
     });
     return dict[sectionID];
@@ -344,7 +350,8 @@
                     LookinAttrGroup_UITableView: @"UITableView",
                     LookinAttrGroup_UITextView: @"UITextView",
                     LookinAttrGroup_UITextField: @"UITextField",
-                    LookinAttrGroup_UIVisualEffectView: @"UIVisualEffectView"
+                    LookinAttrGroup_UIVisualEffectView: @"UIVisualEffectView",
+                    LookinAttrGroup_KcDebugMethod: @"常用调试方法",
                     };
     });
     NSString *title = rawInfo[groupID];
@@ -1038,6 +1045,14 @@
                          @"fullTitle": @"ClearButtonMode",
                          @"enumList": @"UITextFieldViewMode",
                          @"patch": @(NO)
+                         },
+                 
+                 // 常用调试方法说明
+                 LookinAttr_Kc_Debug_methodDesc: @{
+                         @"className": @"CALayer",
+                         @"getterString": @"xxx",
+                         @"setterString": @"",
+                         @"typeIfObj": @(LookinAttrTypeCustomObj)
                          },
                  };
     });

@@ -27,7 +27,7 @@
         }
         
         NSString *systemName = [name substringWithRange:NSMakeRange(1, range.location - 1)];
-        NSString *className = [LKDashboardAttributeRelationView demangleNameWithCString:systemName.UTF8String];
+        NSString *className = [[self class] demangleNameWithCString:systemName.UTF8String];
         
         [results addObject:[NSString stringWithFormat:@"(%@%@", className, [name substringFromIndex:range.location]]];
     }

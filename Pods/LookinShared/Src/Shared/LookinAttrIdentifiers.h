@@ -30,6 +30,7 @@ extern LookinAttrGroupIdentifier const LookinAttrGroup_UITextView;
 extern LookinAttrGroupIdentifier const LookinAttrGroup_UITextField;
 extern LookinAttrGroupIdentifier const LookinAttrGroup_UIVisualEffectView;
 
+extern LookinAttrGroupIdentifier const LookinAttrGroup_KcDebugMethod;
 
 #pragma mark - Section
 
@@ -120,6 +121,9 @@ extern LookinAttrSectionIdentifier const LookinAttrSec_UITextField_ClearButtonMo
 
 extern LookinAttrSectionIdentifier const LookinAttrSec_UIVisualEffectView_Style;
 extern LookinAttrSectionIdentifier const LookinAttrSec_UIVisualEffectView_QMUIForegroundColor;
+
+
+extern LookinAttrSectionIdentifier const LookinAttrSec_KcDebugMethod_Class;
 
 #pragma mark - Attr
 
@@ -234,3 +238,6 @@ extern LookinAttrIdentifier const LookinAttr_UITextField_ClearButtonMode_Mode;
 
 extern LookinAttrIdentifier const LookinAttr_UIVisualEffectView_Style_Style;
 extern LookinAttrIdentifier const LookinAttr_UIVisualEffectView_QMUIForegroundColor_Color;
+
+
+extern LookinAttrIdentifier const LookinAttr_Kc_Debug_methodDesc;

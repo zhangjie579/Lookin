@@ -18,6 +18,7 @@
 
 @end
 
+/// 右边栏目, 每一项卡片容器view
 @interface LKDashboardCardView : LKBaseView
 
 @property(nonatomic, weak) LKDashboardViewController *dashboardViewController;
