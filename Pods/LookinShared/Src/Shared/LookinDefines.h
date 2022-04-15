@@ -95,7 +95,10 @@ enum {
     LookinPush_CanceHierarchyDetails = 304,
     
     /// iOS 端推送 method trace 信息
-    LookinPush_MethodTraceRecord = 403
+    LookinPush_MethodTraceRecord = 403,
+    
+    /// 执行某个对象方法
+    LookinRequestTypePerformSelector = 1000,
 };
 
 static NSString * const LookinParam_ViewLayerTag = @"tag";

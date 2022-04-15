@@ -44,6 +44,9 @@
 
 - (RACSignal *)invokeMethodWithOid:(unsigned long)oid text:(NSString *)text;
 
+/// 执行方法
+- (RACSignal *)performSelectorWithText:(NSString *)text;
+
 /// 获取某个 imageView 的 image 对象，oid 是 imageView 的 oid
 - (RACSignal *)fetchImageWithImageViewOid:(unsigned long)oid;
 

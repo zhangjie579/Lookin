@@ -56,7 +56,14 @@
     return self;
 }
 
+/// 控制台 - 输入内容调试
 - (RACSignal *)submit:(NSString *)text {
+    // 执行方法 - 自定义的支持oc格式的方法调用, 支持简单参数
+    if ([text containsString:@"["] && [text containsString:@"]"]) {
+        return [self kc_evalWithText:text];
+    }
+    
+    // 1.异常情况
     if (!self.currentObject) {
         return [RACSignal error:LookinErr_Inner];
     }
@@ -66,12 +73,14 @@
     if (![LKAppsManager sharedInstance].inspectingApp) {
         return [RACSignal error:LookinErr_NoConnect];
     }
+    // 内容中不能有:
     if ([text containsString:@":"]) {
         NSString *className = self.currentObject.completedSelfClassName;
         NSString *address = self.currentObject.memoryAddress;
         NSString *errDesc = [NSString stringWithFormat:NSLocalizedString(@"You can click \"Pause\" button near the bottom-left corner in Xcode to pause your iOS app, and input in Xcode console like the contents below:\nexpr [((%@ *)%@) %@]", nil), className, address, text];
         return [RACSignal error:LookinErrorMake(NSLocalizedString(@"Lookin doesn't support invoking methods with arguments yet.", nil), errDesc)];
     }
+    // 内容中不能有.
     if ([text containsString:@"."]) {
         return [RACSignal error:LookinErrorMake(NSLocalizedString(@"Lookin doesn't support this syntax yet. Please input a method or property name.", nil), @"")];
     }
@@ -181,6 +190,51 @@
     if (self.recentObjects.count > maxCount) {
         [self.recentObjects removeLastObject];
     }
+}
+
+// MARK: - 调用方法
+
+/// string当做方法执行
+- (RACSignal *)kc_evalWithText:(NSString *)text {
+    @weakify(self);
+    return [[[LKAppsManager sharedInstance].inspectingApp performSelectorWithText:text] doNext:^(NSDictionary *dict) {
+        NSString *_Nullable returnDescription = dict[@"description"];
+        NSString *_Nullable errorLog = dict[@"errorLog"];
+
+        @strongify(self);
+        NSMutableArray<LKConsoleDataSourceRowItem *> *rowItems = self.rowItems.mutableCopy;
+        [rowItems insertObject:({
+            LKConsoleDataSourceRowItem *item = [LKConsoleDataSourceRowItem new];
+            item.type = LKConsoleDataSourceRowItemTypeSubmit;
+            item.normalText = text;
+            item.highlightText = [NSString stringWithFormat:@"<%@: %@>", self.currentObject.shortSelfClassName, self.currentObject.memoryAddress];
+            item;
+        }) atIndex:(rowItems.count - 1)];
+        if (returnDescription.length) {
+            [rowItems insertObject:({
+                LKConsoleDataSourceRowItem *item = [LKConsoleDataSourceRowItem new];
+                item.type = LKConsoleDataSourceRowItemTypeReturn;
+                item.normalText = returnDescription;
+                item;
+            }) atIndex:(rowItems.count - 1)];
+        } else if (errorLog.length) {
+            [rowItems insertObject:({
+                LKConsoleDataSourceRowItem *item = [LKConsoleDataSourceRowItem new];
+                item.type = LKConsoleDataSourceRowItemTypeReturn;
+                item.normalText = errorLog;
+                item;
+            }) atIndex:(rowItems.count - 1)];
+        } else { // 成功执行了该方法（该方法无返回值）
+            [rowItems insertObject:({
+                LKConsoleDataSourceRowItem *item = [LKConsoleDataSourceRowItem new];
+                item.type = LKConsoleDataSourceRowItemTypeReturn;
+                item.normalText = NSLocalizedString(@"The method was invoked successfully and no value was returned.", nil);
+                item;
+            }) atIndex:(rowItems.count - 1)];
+        }
+        
+        self.rowItems = rowItems;
+    }];
 }
 
 @end
