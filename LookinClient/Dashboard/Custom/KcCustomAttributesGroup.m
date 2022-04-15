@@ -28,7 +28,7 @@
         debugMethodAttribute.identifier = LookinAttr_Kc_Debug_methodDesc;
         debugMethodAttribute.attrType = LookinAttrTypeCustomObj;
         debugMethodAttribute.value = @[
-            @"😄😄关于动态执行方法说明: 格式oc方法 [0x12434534/类名 方法名:参数value]; 支持参数: int...基本数据类型, string, 16进制address, 传递class直接用类名, @id(类型) -> 内部会创建对应对象, @id(地址) -> 内存会转objc对象",
+            @"😄😄关于动态执行方法说明\n * 格式oc方法 [0x12434534/类名 方法名:参数value]\n * 支持参数: int...基本数据类型, string, 16进制address, 传递class用类名, @id(类名) -> 内部会创建对应对象, @id(地址) -> 内存会转objc对象",
             @"dump功能: 查看KcDebugSwift库 NSObject+KcObjcDump",
             
             @"查找属性name: kc_debug_findUIPropertyName",
