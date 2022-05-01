@@ -23,4 +23,10 @@
 
 @property(nonatomic, assign) BOOL isDarkMode;
 
+/// 隐藏view
+- (void)hiddenView;
+
+/// 重置隐藏状态
+- (void)resetHiddenViewStatus;
+
 @end

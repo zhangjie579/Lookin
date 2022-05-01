@@ -22,6 +22,9 @@
 @property(nonatomic, strong) SCNNode *maskNode;
 @property(nonatomic, strong) SCNPlane *maskPlane;
 
+/// 是否自定义更新hidden状态
+@property (nonatomic) BOOL isCustomUpdateHiddenStatus;
+
 @end
 
 @implementation LookinDisplayItemNode
@@ -261,6 +264,52 @@
     if (property == LookinDisplayItemProperty_None || property == LookinDisplayItemProperty_DisplayingInHierarchy || property == LookinDisplayItemProperty_InHiddenHierarchy) {
         [self _renderVisibility];
     }
+}
+
+#pragma mark - 隐藏和显示
+
+/// 隐藏view
+- (void)hiddenView {
+    // 已经是隐藏
+    if (self.displayItem.inHiddenHierarchy) {
+        return;
+    }
+    
+    self.isCustomUpdateHiddenStatus = true;
+    
+    [SCNTransaction begin];
+    
+    self.contentNode.opacity = 0;
+    self.borderNode.opacity = 0;
+    self.maskNode.hidden = YES;
+    
+    self.contentNode.categoryBitMask = LookinPreviewBitMask_Unselectable|LookinPreviewBitMask_NoLight;
+    
+    [SCNTransaction commit];
+}
+
+/// 重置隐藏状态
+- (void)resetHiddenViewStatus {
+    // 本来就是隐藏 -> 不用处理
+    if (self.displayItem.inHiddenHierarchy) {
+        return;
+    }
+    
+    if (!self.isCustomUpdateHiddenStatus) {
+        return;
+    }
+    
+    self.isCustomUpdateHiddenStatus = false;
+    
+    [SCNTransaction begin];
+    
+    self.contentNode.opacity = 1;
+    self.borderNode.opacity = 1;
+    self.maskNode.hidden = NO;
+    
+    self.contentNode.categoryBitMask = LookinPreviewBitMask_Selectable|LookinPreviewBitMask_NoLight;
+    
+    [SCNTransaction commit];
 }
 
 @end

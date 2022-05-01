@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		094E413CB04F29F94551D070 /* Pods_LookinClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81A3B0CB06C22A05EDC913F3 /* Pods_LookinClient.framework */; };
+		2FC88841281E1972002C36FD /* KcCustomToolBarItems.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */; };
+		2FC88844281E1A09002C36FD /* KcDoubleSlide.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88843281E1A09002C36FD /* KcDoubleSlide.m */; };
 		A26EF69427F89F83005A9E4E /* ShortCocoa+Private.m in Sources */ = {isa = PBXBuildFile; fileRef = A26EF68827F89F83005A9E4E /* ShortCocoa+Private.m */; };
 		A26EF69527F89F83005A9E4E /* ShortCocoaCore.m in Sources */ = {isa = PBXBuildFile; fileRef = A26EF68927F89F83005A9E4E /* ShortCocoaCore.m */; };
 		A26EF69627F89F83005A9E4E /* ShortCocoa+Others.m in Sources */ = {isa = PBXBuildFile; fileRef = A26EF68A27F89F83005A9E4E /* ShortCocoa+Others.m */; };
@@ -198,6 +200,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2FC8883F281E1972002C36FD /* KcCustomToolBarItems.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcCustomToolBarItems.h; sourceTree = "<group>"; };
+		2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcCustomToolBarItems.m; sourceTree = "<group>"; };
+		2FC88842281E1A09002C36FD /* KcDoubleSlide.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcDoubleSlide.h; sourceTree = "<group>"; };
+		2FC88843281E1A09002C36FD /* KcDoubleSlide.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDoubleSlide.m; sourceTree = "<group>"; };
 		607BE4658FF90E8DCB8EC923 /* Pods-LookinClient.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LookinClient.debug.xcconfig"; path = "Target Support Files/Pods-LookinClient/Pods-LookinClient.debug.xcconfig"; sourceTree = "<group>"; };
 		81A3B0CB06C22A05EDC913F3 /* Pods_LookinClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_LookinClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A26EF68627F89F83005A9E4E /* ShortCocoa+String.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ShortCocoa+String.h"; sourceTree = "<group>"; };
@@ -972,6 +978,8 @@
 				AA049A1521E61B85008C6366 /* LKMenuPopoverSettingController.h */,
 				AA049A1621E61B85008C6366 /* LKMenuPopoverSettingController.m */,
 				AAA8C10521CC17680017A345 /* LKMenuPopoverAppsListController.h */,
+				2FC8883F281E1972002C36FD /* KcCustomToolBarItems.h */,
+				2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */,
 			);
 			path = Toolbar;
 			sourceTree = "<group>";
@@ -1075,6 +1083,8 @@
 			children = (
 				C186A7A22806CE0800B2F2B3 /* KcSwiftTool.swift */,
 				C186A7A12806CE0700B2F2B3 /* LookinClient-Bridging-Header.h */,
+				2FC88842281E1A09002C36FD /* KcDoubleSlide.h */,
+				2FC88843281E1A09002C36FD /* KcDoubleSlide.m */,
 			);
 			path = KcTool;
 			sourceTree = "<group>";
@@ -1242,6 +1252,7 @@
 				AAAEB36E22B408DF00A3DDE7 /* LKDashboardAttributeStringArrayView.m in Sources */,
 				AAB09025229D736F00159B15 /* LKOutlineView.m in Sources */,
 				AAC5E2DE228034DC0081A810 /* LKHierarchyDataSource.m in Sources */,
+				2FC88844281E1A09002C36FD /* KcDoubleSlide.m in Sources */,
 				AAC1FB212282EDC6000A3653 /* LKWindowToolbarHelper.m in Sources */,
 				A26EF69827F89F83005A9E4E /* ShortCocoa+Layout.m in Sources */,
 				AAED8ED822AFED490051242B /* LKDashboardAttributeSizeView.m in Sources */,
@@ -1361,6 +1372,7 @@
 				AAB65C062320ED56001E4299 /* LKDashboardSearchInputView.m in Sources */,
 				AA28179F22B0305400A0874C /* LKDashboardAttributeRowsCountView.m in Sources */,
 				AA05CCDD221ED6110086CDD1 /* LKDashboardAttributeEnumsView.m in Sources */,
+				2FC88841281E1972002C36FD /* KcCustomToolBarItems.m in Sources */,
 				AA50755422A28A1600D2A5AC /* LKConsoleReturnRowView.m in Sources */,
 				AADD181A2302FB5B00AF79A4 /* NSControl+LookinClient.m in Sources */,
 				AAA2C6142297D5CF005CBA10 /* LKMethodTraceDataSource.m in Sources */,
@@ -1538,7 +1550,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 8;
-				DEVELOPMENT_TEAM = WXH4S8VA6B;
+				DEVELOPMENT_TEAM = C4WLJGA86U;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1574,7 +1586,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 8;
-				DEVELOPMENT_TEAM = WXH4S8VA6B;
+				DEVELOPMENT_TEAM = C4WLJGA86U;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

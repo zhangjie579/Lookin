@@ -20,6 +20,11 @@ extern NSToolbarItemIdentifier const LKToolBarIdentifier_Add;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Remove;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Measure;
 
+/// 隐藏view, 调整可视化view视图
+extern NSToolbarItemIdentifier const LKToolBarIdentifier_AdjustVisableOfViews;
+/// 只显示选中的view
+extern NSToolbarItemIdentifier const LKToolBarIdentifier_focusOnSelectedView;
+
 @class LKPreferenceManager, LookinAppInfo;
 
 @interface LKWindowToolbarHelper : NSObject

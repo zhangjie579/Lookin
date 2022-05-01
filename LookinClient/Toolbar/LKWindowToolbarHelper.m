@@ -13,6 +13,9 @@
 #import "LKNavigationManager.h"
 #import "LookinPreviewView.h"
 #import "LKWindowToolbarScaleView.h"
+#import "LKUserActionManager.h"
+#import "KcCustomToolBarItems.h"
+#import "KcDoubleSlide.h"
 
 NSToolbarItemIdentifier const LKToolBarIdentifier_Dimension = @"0";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Scale = @"1";
@@ -26,10 +29,17 @@ NSToolbarItemIdentifier const LKToolBarIdentifier_Console = @"15";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Rotation = @"16";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Measure = @"17";
 
+/// 隐藏view
+NSToolbarItemIdentifier const LKToolBarIdentifier_AdjustVisableOfViews = @"21";
+/// 只显示选中的view
+NSToolbarItemIdentifier const LKToolBarIdentifier_focusOnSelectedView = @"22";
+
 static NSString * const Key_BindingPreferenceManager = @"PreferenceManager";
 static NSString * const Key_BindingAppInfo = @"AppInfo";
 
 @interface LKWindowToolbarHelper ()
+
+@property (nonatomic) KcCustomToolBarItems *customToolBarItems;
 
 @end
 
@@ -51,7 +61,7 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
 - (NSToolbarItem *)makeToolBarItemWithIdentifier:(NSToolbarItemIdentifier)identifier preferenceManager:(LKPreferenceManager *)manager {
     NSAssert(![identifier isEqualToString:LKToolBarIdentifier_AppInReadMode], @"请使用 makeAppInReadModeItemWithAppInfo: 方法");
     
-    if ([identifier isEqualToString:LKToolBarIdentifier_Measure]) {
+    if ([identifier isEqualToString:LKToolBarIdentifier_Measure]) { // 测距
         NSImage *image = NSImageMake(@"icon_measure");
         image.template = YES;
         
@@ -267,6 +277,51 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
         return item;
     }
     
+    if ([identifier isEqualToString:LKToolBarIdentifier_AdjustVisableOfViews]) {
+        NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
+        
+//        NSSlider *slide = [[NSSlider alloc] initWithFrame:NSMakeRect(0, 0, 160, 34)];
+//        slide.minValue = 0;
+//        slide.maxValue = 100;
+//        slide.integerValue = 100;
+//        slide.sliderType = NSSliderTypeLinear;
+//        slide.target = self.customToolBarItems;
+//        slide.action = @selector(adjustTheRangeOfVisableOfViewsWithSlide:);
+
+        KcDoubleSlide *slide = [[KcDoubleSlide alloc] initWithFrame:NSMakeRect(0, 0, 160, 34) leftValue:0 rightValue:100 totalLength:100];
+
+        __weak typeof(self) weakSelf = self;
+        slide.updateSlideValue = ^(KcDoubleSlide *slide, double leftValue, double rightValue) {
+            [weakSelf.customToolBarItems adjustTheRangeOfVisableOfViewsWithSlide:slide];
+        };
+        
+        item.label = @"调整可视view的范围";
+        item.view = slide;
+        item.minSize = slide.frame.size;
+        
+        return item;
+    }
+    
+    if ([identifier isEqualToString:LKToolBarIdentifier_focusOnSelectedView]) {
+        NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
+        
+        NSButton *btn = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 60, 34)];
+        btn.bezelStyle = NSBezelStyleTexturedRounded;
+        [btn setButtonType:NSButtonTypePushOnPushOff];
+        btn.target = self.customToolBarItems;
+        btn.action = @selector(focusOnSelectedView:);
+        btn.title = @"聚焦";
+        btn.tag = 0;
+        
+//        [LKUserActionManager.sharedInstance addDelegate:self.customToolBarItems];
+        
+        item.label = @"聚焦选中的view";
+        item.view = btn;
+        item.minSize = btn.frame.size;
+        
+        return item;
+    }
+    
     NSAssert(NO, @"");
     return nil;
 }
@@ -366,6 +421,15 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
     NSButton *button = param.relatedObject;
     BOOL boolValue = param.boolValue;
     button.state = boolValue ? NSControlStateValueOn : NSControlStateValueOff;
+}
+
+#pragma mark - 懒加载
+
+- (KcCustomToolBarItems *)customToolBarItems {
+    if (!_customToolBarItems) {
+        _customToolBarItems = [[KcCustomToolBarItems alloc] init];
+    }
+    return _customToolBarItems;
 }
 
 @end
