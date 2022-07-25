@@ -18,6 +18,8 @@
 #import "LKWindowController.h"
 #include <mach-o/dyld.h>
 #import <Sparkle/Sparkle.h>
+@import AppCenter;
+@import AppCenterAnalytics;
 
 static NSUInteger const kTag_About = 11;
 static NSUInteger const kTag_Preferences = 12;
@@ -41,6 +43,21 @@ static NSUInteger const kTag_ShowWebsite = 52;
 static NSUInteger const kTag_ShowConfig = 53;
 static NSUInteger const kTag_ShowLookiniOS = 54;
 static NSUInteger const kTag_MethodTrace = 55;
+static NSUInteger const kTag_DeveloperProfile = 56;
+
+static NSUInteger const kTag_GitHub = 57;
+static NSUInteger const kTag_LookinClientGitHub = 58;
+static NSUInteger const kTag_LookinServerGitHub = 59;
+
+static NSUInteger const kTag_ReportIssues = 60;
+static NSUInteger const kTag_Email = 61;
+static NSUInteger const kTag_LookinClientGitHubIssues = 62;
+static NSUInteger const kTag_LookinServerGitHubIssues = 63;
+static NSUInteger const kTag_Weibo = 64;
+
+static NSUInteger const kTag_CopyPod = 66;
+static NSUInteger const kTag_CopySPM = 67;
+static NSUInteger const kTag_MoreIntegrationGuide = 68;
 
 @interface LKAppMenuManager ()
 
@@ -111,7 +128,7 @@ static NSUInteger const kTag_MethodTrace = 55;
     
     // 帮助
     NSMenu *menu_help = [menu itemAtIndex:5].submenu;
-    menu_help.autoenablesItems = NO;
+    menu_help.autoenablesItems = YES;
     menu_help.delegate = self;
     
     // 帮助 - 显示 Framework
@@ -138,6 +155,61 @@ static NSUInteger const kTag_MethodTrace = 55;
     NSMenuItem *menuItem_showLookiniOS = [menu_help itemWithTag:kTag_ShowLookiniOS];
     menuItem_showLookiniOS.target = self;
     menuItem_showLookiniOS.action = @selector(_handleShowLookiniOS);
+    
+    NSMenuItem *menuItem_viewDeveloperProfile = [menu_help itemWithTag:kTag_DeveloperProfile];
+    menuItem_viewDeveloperProfile.target = self;
+    menuItem_viewDeveloperProfile.action = @selector(_handleShowDeveloperProfile);
+    
+    NSMenu *sourceCodeMenu = [menu_help itemWithTag:kTag_GitHub].submenu;
+    {
+        NSMenuItem *item = [sourceCodeMenu itemWithTag:kTag_LookinClientGitHub];
+        item.target = self;
+        item.action = @selector(_handleShowLookinClientGithub);
+    }
+    
+    {
+        NSMenuItem *item = [sourceCodeMenu itemWithTag:kTag_LookinServerGitHub];
+        item.target = self;
+        item.action = @selector(_handleShowLookinServerGithub);
+    }
+    
+    NSMenu *issuesMenu = [menu_help itemWithTag:kTag_ReportIssues].submenu;
+    {
+        NSMenuItem *item = [issuesMenu itemWithTag:kTag_Email];
+        item.target = self;
+        item.action = @selector(_handleEmail);
+    }
+    {
+        NSMenuItem *item = [issuesMenu itemWithTag:kTag_LookinClientGitHubIssues];
+        item.target = self;
+        item.action = @selector(_handleClientIssues);
+    }
+    {
+        NSMenuItem *item = [issuesMenu itemWithTag:kTag_LookinServerGitHubIssues];
+        item.target = self;
+        item.action = @selector(_handleServerIssues);
+    }
+    {
+        NSMenuItem *item = [issuesMenu itemWithTag:kTag_Weibo];
+        item.target = self;
+        item.action = @selector(_handleWeibo);
+    }
+    
+    {
+        NSMenuItem *item = [menu_help itemWithTag:kTag_CopyPod];
+        item.target = self;
+        item.action = @selector(_handleCopyPod);
+    }
+    {
+        NSMenuItem *item = [menu_help itemWithTag:kTag_CopySPM];
+        item.target = self;
+        item.action = @selector(_handleCopySPM);
+    }
+    {
+        NSMenuItem *item = [menu_help itemWithTag:kTag_MoreIntegrationGuide];
+        item.target = self;
+        item.action = @selector(_handleOpenMoreIntegrationGuide);
+    }
     
     NSArray *itemArray = [menu_file.itemArray arrayByAddingObjectsFromArray:menu_view.itemArray];
     [itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -210,6 +282,8 @@ static NSUInteger const kTag_MethodTrace = 55;
         return;
     }
     [wc appMenuManagerDidSelectExpansionIndex:index];
+    
+    [MSACAnalytics trackEvent:@"Hierarchy Expansion" withProperties:@{@"level":[NSString stringWithFormat:@"%@", idxNum]}];
 }
 
 - (void)_handleShowConfig {
@@ -220,8 +294,60 @@ static NSUInteger const kTag_MethodTrace = 55;
     [LKHelper openLookinWebsiteWithPath:@"faq/lookin-ios/"];
 }
 
+- (void)_handleShowDeveloperProfile {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.linkedin.com/in/likai123"]];
+}
+
+- (void)_handleShowLookinClientGithub {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/hughkli/Lookin"]];
+}
+
+- (void)_handleShowLookinServerGithub {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/QMUI/LookinServer"]];
+}
+
+- (void)_handleEmail {
+    NSString *stringToCopy = @"lookin@lookin.work";
+    
+    NSPasteboard *paste = [NSPasteboard generalPasteboard];
+    [paste clearContents];
+    [paste writeObjects:@[stringToCopy]];
+}
+
+- (void)_handleClientIssues {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/hughkli/Lookin/issues"]];
+}
+
+- (void)_handleServerIssues {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/QMUI/LookinServer/issues"]];
+}
+
+- (void)_handleWeibo {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://weibo.com/234885306"]];
+}
+
 - (void)_handleShowWebsite {
     [LKHelper openLookinOfficialWebsite];
+}
+
+- (void)_handleCopyPod {
+    NSString *stringToCopy = @"pod 'LookinServer', :configurations => ['Debug']";
+    
+    NSPasteboard *paste = [NSPasteboard generalPasteboard];
+    [paste clearContents];
+    [paste writeObjects:@[stringToCopy]];
+}
+
+- (void)_handleCopySPM {
+    NSString *stringToCopy = @"https://github.com/QMUI/LookinServer/";
+    
+    NSPasteboard *paste = [NSPasteboard generalPasteboard];
+    [paste clearContents];
+    [paste writeObjects:@[stringToCopy]];
+}
+
+- (void)_handleOpenMoreIntegrationGuide {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/QMUI/LookinServer/blob/master/README.md"]];
 }
 
 - (void)_handleCheckUpdates {

@@ -15,6 +15,10 @@
 #import "LookinDocument.h"
 #import "NSString+Score.h"
 #import "LookinDashboardBlueprint.h"
+#import "LKPreferenceManager.h"
+@import AppCenter;
+@import AppCenterAnalytics;
+@import AppCenterCrashes;
 
 #import "KcSwizzleHelp.h"
 
@@ -47,12 +51,24 @@
     }];
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    [self _extractServerFrameworkIfNeeded];
-    
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {    
     [LKConnectionManager sharedInstance];
     if (!self.launchedToOpenFile) {
         [[LKNavigationManager sharedInstance] showLaunch];
+    }
+    
+    [self resolveAppCenterKey];
+    
+    NSString *key = [self resolveAppCenterKey];
+    if (key) {
+        [MSACAppCenter start:key withServices:@[
+            [MSACAnalytics class],
+            [MSACCrashes class]
+        ]];
+        MSACAppCenter.enabled = LKPreferenceManager.mainManager.enableReport;
+    }
+    else {
+        MSACAppCenter.enabled = NO;
     }
     
 #ifdef DEBUG
@@ -86,34 +102,19 @@
     return NSTerminateNow;
 }
 
-#pragma mark - LookinServer
-
-- (void)_extractServerFrameworkIfNeeded {
-    // /Users/hughkli/Library/Developer/Xcode/DerivedData/Lookin-aakuktsqhjnrovcimtdtpcbdyqqh/Build/Products/Debug/Lookin Experimental.app
-    NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
-    NSString *frameworkDirPath = [bundlePath stringByAppendingPathComponent:@"/Contents/Resources/LookinServerFramework/"];
-    NSString *unzippedFilePath = [frameworkDirPath stringByAppendingPathComponent:@"LookinServer.framework"];
-    
-    NSFileManager *mng = [NSFileManager defaultManager];
-    BOOL alreadyZipped = [mng fileExistsAtPath:unzippedFilePath isDirectory:NULL];
-    if (alreadyZipped) {
-        return;
-    }
-    
-    NSString *zipFilePath = [frameworkDirPath stringByAppendingPathComponent:@"LookinServer.zip"];
-    if (![mng fileExistsAtPath:zipFilePath isDirectory:NULL]) {
-        // error, zip 文件不存在
-        return;
-    }
-    NSArray *arguments = [NSArray arrayWithObject:zipFilePath];
-    NSTask *unzipTask = [[NSTask alloc] init];
-    [unzipTask setLaunchPath:@"/usr/bin/unzip"];
-    [unzipTask setCurrentDirectoryPath:frameworkDirPath];
-    [unzipTask setArguments:arguments];
-    [unzipTask launch];
-}
-
 #pragma mark - Test
+
+- (NSString *)resolveAppCenterKey {
+    NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    if ([bundleID isEqualToString:@"hughkli.Lookin"]) {
+        return @"fce2565c-518c-4851-be73-fa8317dd1590";
+    }
+    if ([bundleID isEqualToString:@"hughkli.LookinTestflight"]) {
+        return @"217d75fa-ecab-4eba-a0de-ef7d97fb134f";
+    }
+    NSAssert(NO, @"");
+    return nil;
+}
 
 /// 一些单元测试
 - (void)_runTests {
