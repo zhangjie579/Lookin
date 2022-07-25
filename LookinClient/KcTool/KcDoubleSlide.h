@@ -33,6 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// 改变滑块的value
 @property (nonatomic, copy) void (^updateSlideValue)(KcDoubleSlide *slide, double leftValue, double rightValue);
 
+/// 重置
+- (void)reset;
+
 @end
 
 NS_ASSUME_NONNULL_END

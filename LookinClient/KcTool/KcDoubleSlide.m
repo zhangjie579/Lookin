@@ -70,6 +70,16 @@
     [self addSubview:self.rightSlideView];
 }
 
+#pragma mark - public
+
+/// 重置
+- (void)reset {
+    self.leftValue = 0;
+    self.rightValue = self.totalLength;
+    
+    [self setNeedsLayout:true];
+}
+
 #pragma mark - event
 
 // 返回YES的话，View会接收mouseDown消息。

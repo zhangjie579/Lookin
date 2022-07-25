@@ -13,6 +13,9 @@
 #import "LKColorIndicatorLayer.h"
 #import "LKUserActionManager.h"
 
+/// 数据源刷新的通知
+NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarchyDataSourceReloadHierarchyNotification";
+
 @interface LKSelectColorItem : NSObject
 
 + (instancetype)itemWithTitle:(NSString *)title color:(LookinColor *)color;
@@ -117,6 +120,9 @@
 
 - (void)reloadWithHierarchyInfo:(LookinHierarchyInfo *)info keepState:(BOOL)keepState {
     self.rawHierarchyInfo = info;
+    
+    // 数据源刷新
+    [NSNotificationCenter.defaultCenter postNotificationName:LKHierarchyDataSourceReloadHierarchyNotification object:self];
 
     if (info.colorAlias.count) {
         [LKPreferenceManager mainManager].receivingConfigTime_Color = [[NSDate date] timeIntervalSince1970];

@@ -33,5 +33,6 @@ Pods
 .lock
 *.xcworkspace
 xcuserdata
+xcshareddata
 *.xcworkspace
 .LSOverride

@@ -16,6 +16,7 @@
 #import "LookinDisplayItemDetail.h"
 #import "LookinDisplayItem.h"
 #import "LookinAppInfo.h"
+#import "LookinAttributesSection.h"
 
 @interface LKStaticHierarchyDataSource ()
 
@@ -46,6 +47,56 @@
 #pragma mark - Public
 
 - (void)reloadWithHierarchyInfo:(LookinHierarchyInfo *)info keepState:(BOOL)keepState {
+//    NSMutableArray<LookinDisplayItem *> *displayItems = [NSMutableArray arrayWithArray:info.displayItems];
+//    { // 调试用的
+//        LookinDisplayItem *firstItem = [[LookinDisplayItem alloc] init];
+//        // 为了保证inHiddenHierarchy为false
+//        firstItem.alpha = 1;
+//        firstItem.isHidden = false;
+//
+//        firstItem.frame = CGRectMake(0, 0, info.appInfo.screenWidth, info.appInfo.screenHeight);
+//
+//        firstItem.viewObject = [[LookinObject alloc] init];
+//        firstItem.viewObject.oid = 135790;
+//
+//        NSMutableArray<LookinAttributesGroup *> *attributesGroupList = [[NSMutableArray alloc] init];
+//
+//        {
+//            LookinAttributesGroup *layoutFrame = [[LookinAttributesGroup alloc] init];
+//            [attributesGroupList addObject:layoutFrame];
+//
+//            layoutFrame.identifier = LookinAttrGroup_Layout;
+//            LookinAttributesSection *layoutFrameSection = [[LookinAttributesSection alloc] init];
+//            layoutFrameSection.identifier = LookinAttrSec_Layout_Frame;
+//
+//            LookinAttribute *frame_frame_attribute = [[LookinAttribute alloc] init];
+//            frame_frame_attribute.identifier = LookinAttr_Layout_Frame_Frame;
+//            frame_frame_attribute.attrType = LookinAttrTypeCGRect;
+//            frame_frame_attribute.value = @(firstItem.frame);
+//            frame_frame_attribute.targetDisplayItem = firstItem;
+//            layoutFrameSection.attributes = @[frame_frame_attribute];
+//
+//            layoutFrame.attrSections = @[layoutFrameSection];
+//        }
+//
+//
+//
+//        firstItem.attributesGroupList = attributesGroupList;
+//
+//        NSImage *image = [[NSImage alloc] init];
+//        image.backgroundColor = NSColor.greenColor;
+//
+//        firstItem.backgroundColor = NSColor.greenColor;
+//        firstItem.soloScreenshot = image;
+//        firstItem.groupScreenshot = image;
+////        firstItem.title = @"调试";
+//        [firstItem setValue:@"调试" forKey:NSStringFromSelector(@selector(title))];
+//        [firstItem setValue:@"调试1" forKey:NSStringFromSelector(@selector(subtitle))];
+//
+//        [displayItems addObject:firstItem];
+//    }
+//    info.displayItems = displayItems;
+    
     [super reloadWithHierarchyInfo:info keepState:keepState];
     
     _appInfo = info.appInfo;

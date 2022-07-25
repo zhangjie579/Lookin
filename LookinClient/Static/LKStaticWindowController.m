@@ -27,6 +27,7 @@
 #import "LookinHierarchyFile.h"
 #import "LookinPreviewView.h"
 #import "LKHierarchyView.h"
+#import "KcDoubleSlide.h"
 
 @interface LKStaticWindowController () <NSToolbarDelegate>
 
@@ -56,6 +57,9 @@
     
     if (self = [self initWithWindow:window]) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_handleInspectingAppDidEnd:) name:LKInspectingAppDidEndNotificationName object:nil];
+        
+        // 刷新数据源
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_handleReloadHierarchyNotification:) name:LKHierarchyDataSourceReloadHierarchyNotification object:nil];
         
         _viewController = [[LKStaticViewController alloc] init];
         window.contentView = self.viewController.view;
@@ -444,6 +448,22 @@
 
 - (void)appMenuManagerDidSelectMethodTrace {
     [[LKNavigationManager sharedInstance] showMethodTrace];
+}
+
+/// 刷新数据源
+- (void)_handleReloadHierarchyNotification:(NSNotification *)notification {
+    NSToolbarItem *_Nullable adjustVisableItem = self.toolbarItemsMap[LKToolBarIdentifier_AdjustVisableOfViews];
+    if (adjustVisableItem) {
+        KcDoubleSlide *slide = (KcDoubleSlide *)adjustVisableItem.view;
+        [slide reset];
+    }
+    
+    NSToolbarItem *_Nullable focusOnSelectedItem = self.toolbarItemsMap[LKToolBarIdentifier_focusOnSelectedView];
+    if (focusOnSelectedItem) {
+        NSButton *btn = (NSButton *)focusOnSelectedItem.view;
+        btn.title = @"聚焦";
+        btn.tag = 0;
+    }
 }
 
 @end

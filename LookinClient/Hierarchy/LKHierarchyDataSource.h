@@ -10,6 +10,9 @@
 
 @class LookinHierarchyInfo, LookinDisplayItem, LKPreferenceManager;
 
+/// 数据源刷新的通知
+extern NSString * const LKHierarchyDataSourceReloadHierarchyNotification;
+
 @interface LKHierarchyDataSource : NSObject
 
 /**
