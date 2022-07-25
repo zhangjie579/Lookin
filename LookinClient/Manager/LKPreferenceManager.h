@@ -38,8 +38,6 @@ typedef NS_ENUM(NSInteger, LookinPreferredCallStackType) {
 
 /// 仅在 macOS 10.14 及以后上生效
 @property(nonatomic, assign) LookinPreferredAppeanranceType appearanceType;
-/// 10.14 及以后该方法返回 YES
-+ (BOOL)canAdjustAppearance;
 
 /// 有效值为 0 ～ 4
 @property(nonatomic, assign) NSInteger expansionIndex;
@@ -68,9 +66,6 @@ typedef NS_ENUM(NSInteger, LookinPreferredCallStackType) {
 /// 上次接收到 iOS app 里传过来的 color config 和 collapsedClasses 信息的时间，用来统计
 @property(nonatomic, assign) NSTimeInterval receivingConfigTime_Color;
 @property(nonatomic, assign) NSTimeInterval receivingConfigTime_Class;
-
-/// 上次接收到的 iOS app 的 setupType，0:未知，1:CocoaPods，2:手动，3:源代码，4:断点
-@property(nonatomic, assign) NSInteger serverSetupType;
 
 /// 返回某个 section 是否应该被显示在主界面上
 - (BOOL)isSectionShowing:(LookinAttrSectionIdentifier)secID;

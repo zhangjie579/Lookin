@@ -9,6 +9,7 @@
 #import "LKPreferenceManager.h"
 #import "LookinDashboardBlueprint.h"
 #import "LookinPreviewView.h"
+@import AppCenter;
 
 NSString *const NotificationName_DidChangeSectionShowing = @"NotificationName_DidChangeSectionShowing";
 
@@ -34,7 +35,6 @@ static NSString * const Key_SyncConsoleTarget = @"syncConsoleTarget";
 static NSString * const Key_FreeRotation = @"FreeRotation";
 static NSString * const Key_ReceivingConfigTime_Color = @"ConfigTime_Color";
 static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
-static NSString * const Key_ServerSetupType = @"serverSetupType";
 
 @interface LKPreferenceManager ()
 
@@ -118,16 +118,12 @@ static NSString * const Key_ServerSetupType = @"serverSetupType";
         _zInterspace = [LookinDoubleMsgAttribute attributeWithDouble:zInterspaceValue];
         [self.zInterspace subscribe:self action:@selector(_handleZInterspaceDidChange:) relatedObject:nil];
         
-        if ([LKPreferenceManager canAdjustAppearance]) {
-            NSNumber *obj_appearanceType = [userDefaults objectForKey:Key_AppearanceType];
-            if (obj_appearanceType != nil) {
-                _appearanceType = [obj_appearanceType integerValue];
-            } else {
-                _appearanceType = LookinPreferredAppeanranceTypeSystem;
-                [userDefaults setObject:@(_appearanceType) forKey:Key_AppearanceType];
-            }
+        NSNumber *obj_appearanceType = [userDefaults objectForKey:Key_AppearanceType];
+        if (obj_appearanceType != nil) {
+            _appearanceType = [obj_appearanceType integerValue];
         } else {
             _appearanceType = LookinPreferredAppeanranceTypeSystem;
+            [userDefaults setObject:@(_appearanceType) forKey:Key_AppearanceType];
         }
         
         NSNumber *obj_expansionIndex = [userDefaults objectForKey:Key_ExpansionIndex];
@@ -176,7 +172,6 @@ static NSString * const Key_ServerSetupType = @"serverSetupType";
         
         _receivingConfigTime_Color = [userDefaults doubleForKey:Key_ReceivingConfigTime_Color];
         _receivingConfigTime_Class = [userDefaults doubleForKey:Key_ReceivingConfigTime_Class];
-        _serverSetupType = [userDefaults integerForKey:Key_ServerSetupType];
     }
     return self;
 }
@@ -201,6 +196,8 @@ static NSString * const Key_ServerSetupType = @"serverSetupType";
     if (self.shouldStoreToLocal) {
         [[NSUserDefaults standardUserDefaults] setObject:@(enableReport) forKey:Key_EnableReport];
     }
+    
+    MSACAppCenter.enabled = enableReport;
 }
 
 - (void)setRgbaFormat:(BOOL)rgbaFormat {
@@ -213,12 +210,7 @@ static NSString * const Key_ServerSetupType = @"serverSetupType";
     }
 }
 
-- (void)setAppearanceType:(LookinPreferredAppeanranceType)appearanceType {
-    if (![LKPreferenceManager canAdjustAppearance] && appearanceType != LookinPreferredAppeanranceTypeSystem) {
-        appearanceType = LookinPreferredAppeanranceTypeSystem;
-        NSAssert(NO, @"");
-    }
-    
+- (void)setAppearanceType:(LookinPreferredAppeanranceType)appearanceType {    
     if (_appearanceType == appearanceType) {
         return;
     }
@@ -226,10 +218,6 @@ static NSString * const Key_ServerSetupType = @"serverSetupType";
     if (self.shouldStoreToLocal) {
         [[NSUserDefaults standardUserDefaults] setObject:@(appearanceType) forKey:Key_AppearanceType];
     }
-}
-
-+ (BOOL)canAdjustAppearance {
-    return YES;
 }
 
 - (void)setExpansionIndex:(NSInteger)expansionIndex {
@@ -301,14 +289,6 @@ static NSString * const Key_ServerSetupType = @"serverSetupType";
     }
     double doubleValue = param.doubleValue;
     [[NSUserDefaults standardUserDefaults] setObject:@(doubleValue) forKey:Key_ZInterspace];
-}
-
-- (void)setServerSetupType:(NSInteger)serverSetupType {
-    if (_serverSetupType == serverSetupType) {
-        return;
-    }
-    _serverSetupType = serverSetupType;
-    [[NSUserDefaults standardUserDefaults] setInteger:serverSetupType forKey:Key_ServerSetupType];
 }
 
 /// 返回某个 section 是否应该被显示在主界面上

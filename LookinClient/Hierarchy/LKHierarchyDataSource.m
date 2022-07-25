@@ -12,6 +12,8 @@
 #import "LKPreferenceManager.h"
 #import "LKColorIndicatorLayer.h"
 #import "LKUserActionManager.h"
+@import AppCenter;
+@import AppCenterAnalytics;
 
 /// 数据源刷新的通知
 NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarchyDataSourceReloadHierarchyNotification";
@@ -130,7 +132,6 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
     if (info.collapsedClassList.count) {
         [LKPreferenceManager mainManager].receivingConfigTime_Class = [[NSDate date] timeIntervalSince1970];
     }
-    [LKPreferenceManager mainManager].serverSetupType = info.serverSetupType;
     
     unsigned long prevSelectedOid = 0;
     NSMutableDictionary *prevExpansionMap = nil;
