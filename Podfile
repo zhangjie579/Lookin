@@ -9,6 +9,11 @@ target 'LookinClient' do
     pod 'AppCenter'
     pod 'ReactiveObjC', '3.1.0'
     pod 'Sparkle', '~> 1.0'
+<<<<<<< HEAD
+=======
+
+    # pod 'LookinShared', :git=>'https://github.com/QMUI/LookinServer.git', :branch => 'develop'
+>>>>>>> 51df8a89470c50206d3eca6393b19ca805b28bfb
     
 #    pod 'LookinShared', :git=>'https://github.com/zhangjie579/LookinServer', :branch => 'personal/samzj'
 
