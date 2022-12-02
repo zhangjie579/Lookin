@@ -32,6 +32,7 @@
             @"dump功能: 查看KcDebugSwift库 NSObject+KcObjcDump",
             
             @"查找属性name: kc_debug_findUIPropertyName",
+            @"查找图层树下设置了对应属性(背景色: 0, 圆角: 1, 边框: 2)的所有subviews: [0x12434534(view的地址) matchSubviewsWithPropertyType:0]",
             @"dump对象: kc_dumpSwift",
             @"获取所有成员变量: kc_dump_allIvarDescription",
             @"view层级: kc_dump_viewHierarchy",
