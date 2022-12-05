@@ -87,11 +87,15 @@
 }
 
 /// 执行方法
-- (RACSignal *)performSelectorWithText:(NSString *)text {
+/// - Parameters:
+///   - text: 方法
+///   - oid: console选中当前对象的address
+- (RACSignal *)performSelectorWithText:(NSString *)text oid:(unsigned long)oid {
     if (!text.length) {
         return [RACSignal error:LookinErr_Inner];
     }
-    NSDictionary *param = @{@"text":text};
+    // 多加一个old参数, 用于替换self/this
+    NSDictionary *param = @{@"text":text, @"oid": @(oid)};
     return [[self _requestWithType:LookinRequestTypePerformSelector data:param] map:^id _Nullable(NSDictionary * _Nullable value) {
         if ([value[@"description"] isEqualToString:LookinStringFlag_VoidReturn]) {
             // 方法没有返回值时，替换成本地说明

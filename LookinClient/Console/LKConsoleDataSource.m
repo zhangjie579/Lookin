@@ -60,7 +60,7 @@
 - (RACSignal *)submit:(NSString *)text {
     // 执行方法 - 自定义的支持oc格式的方法调用, 支持简单参数
     if ([text containsString:@"["] && [text containsString:@"]"]) {
-        return [self kc_evalWithText:text];
+        return [self kc_evalWithText:text oid:self.currentObject.oid];
     }
     
     // 1.异常情况
@@ -195,9 +195,9 @@
 // MARK: - 调用方法
 
 /// string当做方法执行
-- (RACSignal *)kc_evalWithText:(NSString *)text {
+- (RACSignal *)kc_evalWithText:(NSString *)text oid:(unsigned long)oid {
     @weakify(self);
-    return [[[LKAppsManager sharedInstance].inspectingApp performSelectorWithText:text] doNext:^(NSDictionary *dict) {
+    return [[[LKAppsManager sharedInstance].inspectingApp performSelectorWithText:text oid:oid] doNext:^(NSDictionary *dict) {
         NSString *_Nullable returnDescription = dict[@"description"];
         NSString *_Nullable errorLog = dict[@"errorLog"];
 
