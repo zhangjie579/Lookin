@@ -110,7 +110,7 @@
         CGFloat widthInPx = obj.frame.size.width * screenScale;
         CGFloat heightInPx = obj.frame.size.height * screenScale;
         if (widthInPx > maxLengthInPx || heightInPx > maxLengthInPx) {
-            obj.avoidSyncScreenshot = YES;
+            obj.doNotFetchScreenshotReason = LookinDoNotFetchScreenshotForTooLarge;
         }
     }];
     

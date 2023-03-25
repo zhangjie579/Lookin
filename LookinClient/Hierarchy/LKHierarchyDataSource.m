@@ -173,6 +173,13 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
             }
         }
         
+        if (!obj.shouldCaptureImage) {
+            [obj enumerateSelfAndChildren:^(LookinDisplayItem *item) {
+                item.noPreview = YES;
+                item.doNotFetchScreenshotReason = LookinDoNotFetchScreenshotForUserConfig;
+            }];
+        }
+        
         if (!isSwiftProject) {
             if ([obj.displayingObject.completedSelfClassName containsString:@"."]) {
                 isSwiftProject = YES;

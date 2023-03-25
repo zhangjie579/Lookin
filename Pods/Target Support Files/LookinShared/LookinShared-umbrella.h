@@ -35,7 +35,6 @@
 #import "LookinEventHandler.h"
 #import "LookinHierarchyFile.h"
 #import "LookinHierarchyInfo.h"
-#import "LookinIvarTrace.h"
 #import "LookinMethodTraceRecord.h"
 #import "LookinObject.h"
 #import "LookinScreenshotFetchManager.h"
@@ -49,6 +48,7 @@
 #import "Lookin_PTProtocol.h"
 #import "Lookin_PTUSBHub.h"
 #import "Peertalk.h"
+#import "LookinIvarTrace.h"
 
 FOUNDATION_EXPORT double LookinSharedVersionNumber;
 FOUNDATION_EXPORT const unsigned char LookinSharedVersionString[];

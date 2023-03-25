@@ -37,8 +37,10 @@
 
 "Expand recursively" = "Expand recursively";
 "Collapse children" = "Collapse children";
-"Hide screenshot" = "Hide screenshot";
+"Hide screenshot this time" = "Hide screenshot this time";
+"Hide screenshot forever…" = "Hide screenshot forever…";
 "Show screenshot" = "Show screenshot";
+"Show layer border" = "Show layer border";
 "Copy text \"%@\"" = "Copy text \"%@\"";
 
 "Type property or method name here" = "Type property or method name here";
@@ -70,6 +72,8 @@
 "Change App" = "Change App";
 "Image is too large to be displayed." = "Image is too large to be displayed.";
 "The screenshot of selected item is not displayed." = "The screenshot of selected item is not displayed.";
+"The screenshot is not displayed due to the config in iOS App." = "The screenshot is not displayed due to the config in iOS App.";
+"Details" = "Details";
 "Display" = "Display";
 "The screenshot of selected %@ is not displayed." = "The screenshot of selected %@ is not displayed.";
 "Updating screenshots… %@ / %@" = "Updating screenshots… %@ / %@";
