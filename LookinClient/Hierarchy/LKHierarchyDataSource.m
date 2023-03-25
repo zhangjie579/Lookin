@@ -185,6 +185,13 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
                 isSwiftProject = YES;
             }
         }
+        
+        // 隐藏需要过滤的class
+        if (info.filterShowClassList.count) {
+            if ([info.filterShowClassList containsObject:obj.title]) {
+                obj.isHidden = true;
+            }
+        }
     }];
     
     self.flatItems = flatItems;
