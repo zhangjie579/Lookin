@@ -622,6 +622,40 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
                 selfOrChild.isExpanded = NO;
                 [selfOrChild lookin_bindBOOL:YES forKey:Key_ShouldShow];
             }];
+        } else {
+            if ([string hasPrefix:@"0x"] && string.length > 2) { // 搜索地址
+                // 找出第1个不为0的值, 因为可能为0x00011324
+                NSInteger indexAddress = 2;
+                for (NSInteger i = 2; i < string.length; i++) {
+                    NSString *c = [string substringWithRange:NSMakeRange(i, 1)];
+                    if (c.integerValue != 0) {
+                        indexAddress = i;
+                        break;
+                    }
+                }
+                
+                NSString *searchAddress = [NSString stringWithFormat:@"0x%@", [string substringFromIndex:indexAddress]];
+                
+                NSString *memoryAddress;
+                if (displayItem.hostViewControllerObject) {
+                    memoryAddress = displayItem.hostViewControllerObject.memoryAddress;
+                } else {
+                    memoryAddress = displayItem.displayingObject.memoryAddress;
+                }
+                
+                if ([searchAddress isEqualToString:memoryAddress]) {
+                    [displayItem enumerateAncestors:^(LookinDisplayItem *ancestor, BOOL *stop) {
+                        // 上级元素都显示且展开
+                        ancestor.isExpanded = YES;
+                        [ancestor lookin_bindBOOL:YES forKey:Key_ShouldShow];
+                    }];
+                    [displayItem enumerateSelfAndChildren:^(LookinDisplayItem *selfOrChild) {
+                        // 自身和下级元素都显示但折叠，允许用户手动展开
+                        selfOrChild.isExpanded = NO;
+                        [selfOrChild lookin_bindBOOL:YES forKey:Key_ShouldShow];
+                    }];
+                }
+            }
         }
     }];
     
