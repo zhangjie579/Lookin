@@ -105,6 +105,7 @@ static NSIndexSet * PushFrameTypeList() {
         _channelWillEnd = [RACSubject subject];
         _didReceivePush = [RACSubject subject];
         
+        // 连接模拟器的情况, 通过本地写死的那些port来判断
         self.allSimulatorPorts = ({
             NSMutableArray<LKSimulatorConnectionPort *> *ports = [NSMutableArray array];
             for (int number = LookinSimulatorIPv4PortNumberStart; number <= LookinSimulatorIPv4PortNumberEnd; number++) {
