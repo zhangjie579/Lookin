@@ -11,7 +11,7 @@
 #import "LKMenuPopoverSettingController.h"
 #import "LKAppsManager.h"
 #import "LKNavigationManager.h"
-#import "LookinPreviewView.h"
+#import "LKPreviewView.h"
 #import "LKWindowToolbarScaleView.h"
 #import "LKUserActionManager.h"
 #import "KcCustomToolBarItems.h"
@@ -29,6 +29,7 @@ NSToolbarItemIdentifier const LKToolBarIdentifier_Remove = @"14";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Console = @"15";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Rotation = @"16";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Measure = @"17";
+NSToolbarItemIdentifier const LKToolBarIdentifier_Message = @"18";
 
 /// 隐藏view
 NSToolbarItemIdentifier const LKToolBarIdentifier_AdjustVisableOfViews = @"21";
@@ -265,7 +266,7 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
 
         item.label = @"调整可视view的范围";
         item.view = slide;
-        item.minSize = slide.frame.size;
+//        item.minSize = slide.frame.size;
 
         return item;
     }
@@ -289,7 +290,21 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
 
         return item;
     }
-
+    
+    if ([identifier isEqualToString:LKToolBarIdentifier_Message]) {
+        NSImage *image = NSImageMake(@"icon_notification");
+        image.template = YES;
+        
+        NSButton *button = [NSButton new];
+        [button setImage:image];
+        button.bezelStyle = NSBezelStyleTexturedRounded;
+        
+        NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:LKToolBarIdentifier_Message];
+        item.view = button;
+        item.minSize = NSMakeSize(48, 34);
+        return item;
+    }
+    
     NSAssert(NO, @"");
     return nil;
 }

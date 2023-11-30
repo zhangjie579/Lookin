@@ -44,14 +44,14 @@ const CGFloat ZoomSliderMaxValue = 2.8;
     return font;
 }
 
-+ (NSString *)lookinVersion {
++ (NSString *)lookinReadableVersion {
     NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
     NSString *string = [infoDictionary objectForKey:@"CFBundleShortVersionString"];
     return string ? : @"";
 }
 
 + (void)openLookinWebsiteWithPath:(NSString *)path {
-    NSString *version = [[self lookinVersion] stringByReplacingOccurrencesOfString:@"." withString:@"d"];
+    NSString *version = [[self lookinReadableVersion] stringByReplacingOccurrencesOfString:@"." withString:@"d"];
     NSString *urlString = [NSString stringWithFormat:@"https://lookin.work/%@?v=%@", path, version];
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:urlString]];
 }
@@ -172,4 +172,19 @@ const CGFloat ZoomSliderMaxValue = 2.8;
     return [NSTextView scrollableTextView];
 }
 
++ (BOOL)validateFrame:(CGRect)frame {
+    return !CGRectIsNull(frame) && !CGRectIsInfinite(frame) && ![self cgRectIsNaN:frame] && ![self cgRectIsInf:frame] && ![self cgRectIsUnreasonable:frame];
+}
+
++ (BOOL)cgRectIsNaN:(CGRect)rect {
+    return isnan(rect.origin.x) || isnan(rect.origin.y) || isnan(rect.size.width) || isnan(rect.size.height);
+}
+
++ (BOOL)cgRectIsInf:(CGRect)rect {
+    return isinf(rect.origin.x) || isinf(rect.origin.y) || isinf(rect.size.width) || isinf(rect.size.height);
+}
+
++ (BOOL)cgRectIsUnreasonable:(CGRect)rect {
+    return ABS(rect.origin.x) > 100000 || ABS(rect.origin.y) > 100000 || rect.size.width < 0 || rect.size.height < 0 || rect.size.width > 100000 || rect.size.height > 100000;
+}
 @end

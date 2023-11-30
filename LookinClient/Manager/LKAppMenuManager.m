@@ -33,24 +33,19 @@ static NSUInteger const kTag_DecreaseInterspace = 25;
 static NSUInteger const kTag_IncreaseInterspace = 26;
 static NSUInteger const kTag_Expansion = 27;
 static NSUInteger const kTag_Filter = 28;
-static NSUInteger const kTag_DelayReload = 29;
 static NSUInteger const kTag_OpenInNewWindow = 31;
 static NSUInteger const kTag_Export = 32;
 
-static NSUInteger const kTag_ShowFramework = 50;
 static NSUInteger const kTag_CocoaPods = 51;
 static NSUInteger const kTag_ShowWebsite = 52;
 static NSUInteger const kTag_ShowConfig = 53;
 static NSUInteger const kTag_ShowLookiniOS = 54;
-static NSUInteger const kTag_MethodTrace = 55;
-static NSUInteger const kTag_DeveloperProfile = 56;
 
 static NSUInteger const kTag_GitHub = 57;
 static NSUInteger const kTag_LookinClientGitHub = 58;
 static NSUInteger const kTag_LookinServerGitHub = 59;
 
 static NSUInteger const kTag_ReportIssues = 60;
-static NSUInteger const kTag_Email = 61;
 static NSUInteger const kTag_LookinClientGitHubIssues = 62;
 static NSUInteger const kTag_LookinServerGitHubIssues = 63;
 static NSUInteger const kTag_Weibo = 64;
@@ -58,7 +53,7 @@ static NSUInteger const kTag_Weibo = 64;
 static NSUInteger const kTag_CopyPod = 66;
 static NSUInteger const kTag_CopySPM = 67;
 static NSUInteger const kTag_MoreIntegrationGuide = 68;
-static NSUInteger const kTag_ReduceReloadTime = 69;
+static NSUInteger const kTag_Jobs = 69;
 
 @interface LKAppMenuManager ()
 
@@ -93,8 +88,6 @@ static NSUInteger const kTag_ReduceReloadTime = 69;
                                    @(kTag_Export):NSStringFromSelector(@selector(appMenuManagerDidSelectExport)),
                                    @(kTag_OpenInNewWindow):NSStringFromSelector(@selector(appMenuManagerDidSelectOpenInNewWindow)),
                                    @(kTag_Filter):NSStringFromSelector(@selector(appMenuManagerDidSelectFilter)),
-                                   @(kTag_DelayReload):NSStringFromSelector(@selector(appMenuManagerDidSelectDelayReload)),
-                                   @(kTag_MethodTrace):NSStringFromSelector(@selector(appMenuManagerDidSelectMethodTrace)),
     };
     
     NSMenu *menu = [NSApp mainMenu];
@@ -132,11 +125,6 @@ static NSUInteger const kTag_ReduceReloadTime = 69;
     menu_help.autoenablesItems = YES;
     menu_help.delegate = self;
     
-    // 帮助 - 显示 Framework
-    NSMenuItem *menuItem_showFramework = [menu_help itemWithTag:kTag_ShowFramework];
-    menuItem_showFramework.target = self;
-    menuItem_showFramework.action = @selector(_handleShowFramework);
-    
     // 帮助 - CocoaPods
     NSMenuItem *menuItem_cocoaPods = [menu_help itemWithTag:kTag_CocoaPods];
     menuItem_cocoaPods.target = self;
@@ -157,10 +145,6 @@ static NSUInteger const kTag_ReduceReloadTime = 69;
     menuItem_showLookiniOS.target = self;
     menuItem_showLookiniOS.action = @selector(_handleShowLookiniOS);
     
-    NSMenuItem *menuItem_viewDeveloperProfile = [menu_help itemWithTag:kTag_DeveloperProfile];
-    menuItem_viewDeveloperProfile.target = self;
-    menuItem_viewDeveloperProfile.action = @selector(_handleShowDeveloperProfile);
-    
     NSMenu *sourceCodeMenu = [menu_help itemWithTag:kTag_GitHub].submenu;
     {
         NSMenuItem *item = [sourceCodeMenu itemWithTag:kTag_LookinClientGitHub];
@@ -175,11 +159,6 @@ static NSUInteger const kTag_ReduceReloadTime = 69;
     }
     
     NSMenu *issuesMenu = [menu_help itemWithTag:kTag_ReportIssues].submenu;
-    {
-        NSMenuItem *item = [issuesMenu itemWithTag:kTag_Email];
-        item.target = self;
-        item.action = @selector(_handleEmail);
-    }
     {
         NSMenuItem *item = [issuesMenu itemWithTag:kTag_LookinClientGitHubIssues];
         item.target = self;
@@ -212,9 +191,9 @@ static NSUInteger const kTag_ReduceReloadTime = 69;
         item.action = @selector(_handleOpenMoreIntegrationGuide);
     }
     {
-        NSMenuItem *item = [menu_help itemWithTag:kTag_ReduceReloadTime];
+        NSMenuItem *item = [menu_help itemWithTag:kTag_Jobs];
         item.target = self;
-        item.action = @selector(_handleCustomUserConfig);
+        item.action = @selector(_handleJobs);
     }
     
     NSArray *itemArray = [menu_file.itemArray arrayByAddingObjectsFromArray:menu_view.itemArray];
@@ -300,24 +279,12 @@ static NSUInteger const kTag_ReduceReloadTime = 69;
     [LKHelper openLookinWebsiteWithPath:@"faq/lookin-ios/"];
 }
 
-- (void)_handleShowDeveloperProfile {
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.linkedin.com/in/likai123"]];
-}
-
 - (void)_handleShowLookinClientGithub {
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/hughkli/Lookin"]];
 }
 
 - (void)_handleShowLookinServerGithub {
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/QMUI/LookinServer"]];
-}
-
-- (void)_handleEmail {
-    NSString *stringToCopy = @"lookin@lookin.work";
-    
-    NSPasteboard *paste = [NSPasteboard generalPasteboard];
-    [paste clearContents];
-    [paste writeObjects:@[stringToCopy]];
 }
 
 - (void)_handleClientIssues {
@@ -356,31 +323,12 @@ static NSUInteger const kTag_ReduceReloadTime = 69;
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/QMUI/LookinServer/blob/master/README.md"]];
 }
 
-- (void)_handleCustomUserConfig {
-    [LKHelper openCustomConfigWebsite];
+- (void)_handleJobs {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://bytedance.feishu.cn/docx/SAcgdoQuAouyXAxAqy8cmrT2n4b"]];
 }
 
 - (void)_handleCheckUpdates {
     [[SUUpdater sharedUpdater] checkForUpdates:self];
-}
-
-- (void)_handleShowFramework {
-    NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
-    NSString *frameworkDirPath = [bundlePath stringByAppendingPathComponent:@"/Contents/Resources/LookinServerFramework/"];
-    NSString *unzippedFilePath = [frameworkDirPath stringByAppendingPathComponent:@"LookinServer.framework"];
-    NSFileManager *mng = [NSFileManager defaultManager];
-    BOOL fileExsit = [mng fileExistsAtPath:unzippedFilePath isDirectory:NULL];
-    if (!fileExsit) {
-        [self _handleFailingToShowFramework];
-        return;
-    }
-    NSURL *fileUrl = [[NSURL alloc] initFileURLWithPath:unzippedFilePath isDirectory:NO];
-    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[fileUrl]];
-}
-
-- (void)_handleFailingToShowFramework {
-    NSString *message = [NSString stringWithFormat:@"%@%@", NSLocalizedString(@"You can download framework from the url below:", nil), LOOKIN_SERVER_FRAMEWORK_URL];
-    AlertErrorText(NSLocalizedString(@"Failed to show framework in Finder", nil), message, [LKNavigationManager sharedInstance].currentKeyWindowController.window);
 }
 
 - (void)_handleShowCocoaPods {

@@ -30,10 +30,14 @@ syntax: glob
 *~
 .DS_Store
 Pods
+
 .lock
 *.xcworkspace
 xcuserdata
 xcshareddata
 *.xcworkspace
 .LSOverride
+Build/
 Lookin.xcodeproj/xcuserdata
+Lookin.xcworkspace/xcuserdata
+.DS_Store

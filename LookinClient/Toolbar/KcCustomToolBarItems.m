@@ -10,7 +10,7 @@
 #import "KcDoubleSlide.h"
 #import "LKStaticHierarchyDataSource.h"
 #import "LookinDisplayItem.h"
-#import "LookinDisplayItemNode.h"
+#import "LKDisplayItemNode.h"
 #import "LKUserActionManager.h"
 
 @interface KcCustomToolBarItems ()
@@ -84,19 +84,23 @@
         LookinDisplayItem *selectedItem = LKStaticHierarchyDataSource.sharedInstance.selectedItem;
         NSSet<LookinDisplayItem *> *visableSelectedItems = [self displayingFlatItemsWithItem:selectedItem];
         
-        for (LookinDisplayItem *item in displayingFlatItems) {
-            if (![visableSelectedItems containsObject:item]) {
-                if (isFocus) {
-                    [item.previewNode hiddenView];
-                } else {
-                    [item.previewNode resetHiddenViewStatus];
-                }
-            }
-        }
+        [LKStaticHierarchyDataSource.sharedInstance focusDisplayItem:selectedItem];
+        
+//        for (LookinDisplayItem *item in displayingFlatItems) {
+//            if (![visableSelectedItems containsObject:item]) {
+//                if (isFocus) {
+//                    [item.previewNode hiddenView];
+//                } else {
+//                    [item.previewNode resetHiddenViewStatus];
+//                }
+//            }
+//        }
     } else { // 取消聚焦, 因为selectedItem可能变了, 只要把displayingFlatItems全部重置即可
-        for (LookinDisplayItem *item in displayingFlatItems) {
-            [item.previewNode resetHiddenViewStatus];
-        }
+//        for (LookinDisplayItem *item in displayingFlatItems) {
+//            [item.previewNode resetHiddenViewStatus];
+//        }
+        
+        [LKStaticHierarchyDataSource.sharedInstance endFocus];
     }
     
 //    [self recursionHiddenDisplayItemWithSuperItem:selectedItem.superItem

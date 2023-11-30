@@ -28,6 +28,8 @@
 @import AppCenter;
 @import AppCenterAnalytics;
 
+NSString *const LKAppShowConsoleNotificationName = @"LKAppShowConsoleNotificationName";
+
 @interface LKStaticViewController () <NSSplitViewDelegate>
 
 @property(nonatomic, strong) LKSplitView *mainSplitView;
@@ -39,7 +41,8 @@
 @property(nonatomic, strong) LKTipsView *userConfigNoPreviewTipsView;
 @property(nonatomic, strong) LKTipsView *noPreviewTipView;
 @property(nonatomic, strong) LKTipsView *tutorialTipView;
-@property(nonatomic, strong) LKTipsView *delayReloadTipView;
+@property(nonatomic, strong) LKTipsView *customViewTipView;
+@property(nonatomic, strong) LKYellowTipsView *focusTipView;
 
 @property(nonatomic, strong) LKDashboardViewController *dashboardController;
 @property(nonatomic, strong) LKStaticHierarchyController *hierarchyController;
@@ -103,15 +106,20 @@
     self.imageSyncTipsView.hidden = YES;
     [self.view addSubview:self.imageSyncTipsView];
     
-    self.delayReloadTipView = [LKTipsView new];
-    self.delayReloadTipView.hidden = YES;
-    [self.view addSubview:self.delayReloadTipView];
-    
     self.tooLargeToSyncScreenshotTipsView = [LKRedTipsView new];
     self.tooLargeToSyncScreenshotTipsView.image = NSImageMake(@"icon_info");
     self.tooLargeToSyncScreenshotTipsView.title = NSLocalizedString(@"Image is too large to be displayed.", nil);
     self.tooLargeToSyncScreenshotTipsView.hidden = YES;
     [self.view addSubview:self.tooLargeToSyncScreenshotTipsView];
+    
+    self.focusTipView = [LKYellowTipsView new];
+    self.focusTipView.image = NSImageMake(@"icon_info");
+    self.focusTipView.title = NSLocalizedString(@"Currently in focus mode", nil);
+    self.focusTipView.hidden = YES;
+    self.focusTipView.buttonText = NSLocalizedString(@"Exit", nil);
+    self.focusTipView.target = self;
+    self.focusTipView.clickAction = @selector(_handleExitFocusTipView);
+    [self.view addSubview:self.focusTipView];
     
     self.noPreviewTipView = [LKTipsView new];
     self.noPreviewTipView.image = NSImageMake(@"icon_hide");
@@ -121,6 +129,15 @@
     self.noPreviewTipView.clickAction = @selector(_handleNoPreviewTipView);
     self.noPreviewTipView.hidden = YES;
     [self.view addSubview:self.noPreviewTipView];
+    
+    self.customViewTipView = [LKTipsView new];
+    self.customViewTipView.image = NSImageMake(@"Icon_Inspiration_small");
+    self.customViewTipView.title = NSLocalizedString(@"This object may not be a UIView or CALayer.", nil);
+    self.customViewTipView.buttonText = NSLocalizedString(@"Details", nil);
+    self.customViewTipView.target = self;
+    self.customViewTipView.clickAction = @selector(handleCustomViewTipsView);
+    self.customViewTipView.hidden = YES;
+    [self.view addSubview:self.customViewTipView];
     
     self.userConfigNoPreviewTipsView = [LKTipsView new];
     self.userConfigNoPreviewTipsView.image = NSImageMake(@"icon_hide");
@@ -137,25 +154,7 @@
     @weakify(self);
     [RACObserve(dataSource, selectedItem) subscribeNext:^(LookinDisplayItem *item) {
         @strongify(self);
-        BOOL showTips = (![item appropriateScreenshot] && item.doNotFetchScreenshotReason == LookinDoNotFetchScreenshotForTooLarge);
-        BOOL shouldHide = !showTips;
-        if (self.tooLargeToSyncScreenshotTipsView.hidden == shouldHide) {
-            return;
-        }
-        self.tooLargeToSyncScreenshotTipsView.hidden = shouldHide;
-        if (shouldHide) {
-            [self.tooLargeToSyncScreenshotTipsView endAnimation];
-        } else {
-            [self.tooLargeToSyncScreenshotTipsView startAnimation];
-        }
-        [self.view setNeedsLayout:YES];
-    }];
-    
-    [RACObserve(dataSource, selectedItem) subscribeNext:^(LookinDisplayItem *item) {
-        @strongify(self);
-        BOOL showTips = (![item appropriateScreenshot] && item.doNotFetchScreenshotReason == LookinDoNotFetchScreenshotForUserConfig);
-        self.userConfigNoPreviewTipsView.hidden = !showTips;
-        [self.view setNeedsLayout:YES];
+        [self handleSelectItemDidChange];
     }];
     
     [[[RACSignal merge:@[RACObserve(dataSource, selectedItem), dataSource.itemDidChangeNoPreview]] skip:1] subscribeNext:^(id  _Nullable x) {
@@ -170,11 +169,23 @@
         }
     }];
     
+    [RACObserve(dataSource, state) subscribeNext:^(NSNumber * _Nullable x) {
+        @strongify(self);
+        LKHierarchyDataSourceState state = x.unsignedIntegerValue;
+        BOOL isFocus = (state == LKHierarchyDataSourceStateFocus);
+        self.focusTipView.hidden = !isFocus;
+        if (isFocus) {
+            [self.focusTipView startAnimation];
+        } else {
+            [self.focusTipView endAnimation];
+        }
+        [self.view setNeedsLayout:YES];
+    }];
+    
     [RACObserve([LKAppsManager sharedInstance], inspectingApp) subscribeNext:^(LKInspectableApp *app) {
         @strongify(self);
         if (app) {
             [self.imageSyncTipsView setImageByDeviceType:app.appInfo.deviceType];
-            [self.delayReloadTipView setImageByDeviceType:app.appInfo.deviceType];
         }
     }];
     
@@ -204,6 +215,8 @@
         [self.progressView resetToZero];
         AlertError(error, self.view.window);
     }];
+    
+    [[LKPreferenceManager mainManager] reportStatistics];
 }
 
 - (void)viewDidLayout {
@@ -217,10 +230,28 @@
     $(self.progressView).fullWidth.height(3).y(windowTitleHeight);
 
     __block CGFloat tipsY = windowTitleHeight + 10;
-    [$(self.connectionTipsView, self.imageSyncTipsView, self.tooLargeToSyncScreenshotTipsView, self.noPreviewTipView, self.userConfigNoPreviewTipsView, self.tutorialTipView, self.delayReloadTipView).visibles.array enumerateObjectsUsingBlock:^(LKTipsView *tipsView, NSUInteger idx, BOOL * _Nonnull stop) {
+    [$(self.connectionTipsView, self.imageSyncTipsView, self.tooLargeToSyncScreenshotTipsView, self.noPreviewTipView, self.focusTipView, self.userConfigNoPreviewTipsView, self.tutorialTipView, self.customViewTipView).visibles.array enumerateObjectsUsingBlock:^(LKTipsView *tipsView, NSUInteger idx, BOOL * _Nonnull stop) {
         CGFloat midX = self.hierarchyController.view.$width + (self.viewsPreviewController.view.$width - DashboardViewWidth) / 2.0;
         $(tipsView).sizeToFit.y(tipsY).midX(midX);
         tipsY = tipsView.$maxY + 5;
+    }];
+
+    @weakify(self);
+    [[NSNotificationCenter.defaultCenter rac_addObserverForName:LKAppShowConsoleNotificationName object:nil] subscribeNext:^(NSNotification * _Nullable x) {
+        @strongify(self);
+        [MSACAnalytics trackEvent:@"PrintItem"];
+        
+        BOOL isFirstTimeToShowConsole = (self.consoleController == nil);
+        self.showConsole = true;
+        LookinDisplayItem *item = x.object;
+        if (isFirstTimeToShowConsole) {
+            // give a little time to initialize console
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self.consoleController submitWithObj:item.viewObject text:@"self"];
+            });
+        } else {
+            [self.consoleController submitWithObj:item.viewObject text:@"self"];
+        }
     }];
 }
 
@@ -255,15 +286,8 @@
     return self.hierarchyController.hierarchyView;
 }
 
-- (void)showDelayReloadTipWithSeconds:(NSInteger)seconds {
-    self.delayReloadTipView.title = [NSString stringWithFormat:NSLocalizedString(@"Will reload in %@ seconds…", nil), @(seconds)];
-    self.delayReloadTipView.hidden = NO;
-    [self.view setNeedsLayout:YES];
-}
-
-- (void)removeDelayReloadTip {
-    self.delayReloadTipView.hidden = YES;
-    [self.view setNeedsLayout:YES];
+- (LKHierarchyDataSource *)dataSource {
+    return self.hierarchyController.dataSource;
 }
 
 #pragma mark - Tutorial
@@ -273,19 +297,6 @@
     if (TutorialMng.hasAlreadyShowedTipsThisLaunch) {
         return;
     }
-    if (!TutorialMng.doubleClick) {
-        [self _showDoubleClickTutorialTips];
-        return;
-    }
-}
-
-- (void)_showDoubleClickTutorialTips {
-    TutorialMng.doubleClick = YES;
-    TutorialMng.hasAlreadyShowedTipsThisLaunch = YES;
-    self.isShowingDoubleClickTutorialTips = YES;
-    [self _initTutorialTipsIfNeeded];
-    self.tutorialTipView.title = NSLocalizedString(@"You can double-click screenshot to expand or collapse it", nil);
-    [self.view setNeedsLayout:YES];
 }
 
 - (void)showQuickSelectionTutorialTips {
@@ -322,7 +333,6 @@
     }
     self.isShowingQuickSelectTutorialTips = NO;
     self.isShowingMoveWithSpaceTutorialTips = NO;
-    self.isShowingDoubleClickTutorialTips = NO;
 }
 
 - (void)_initTutorialTipsIfNeeded {
@@ -384,6 +394,14 @@
     }
 }
 
+- (void)handleCustomViewTipsView {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://bytedance.feishu.cn/docx/TRridRXeUoErMTxs94bcnGchnlb"]];
+}
+
+- (void)_handleExitFocusTipView {
+    [[self dataSource] endFocus];
+}
+
 - (void)_handleUserConfigNoPreviewTipView {
     [LKHelper openCustomConfigWebsite];
 }
@@ -394,7 +412,31 @@
     self.measureController.view.hidden = !isMeasuring;
 }
 
-#pragma mark - Others
+- (void)handleSelectItemDidChange {
+    LookinDisplayItem *item = [[self dataSource] selectedItem];
+    
+    {
+        BOOL showTips = (item && ![item appropriateScreenshot] && item.doNotFetchScreenshotReason == LookinDoNotFetchScreenshotForTooLarge);
+        BOOL shouldHide = !showTips;
+        if (self.tooLargeToSyncScreenshotTipsView.hidden != shouldHide) {
+            self.tooLargeToSyncScreenshotTipsView.hidden = shouldHide;
+            if (shouldHide) {
+                [self.tooLargeToSyncScreenshotTipsView endAnimation];
+            } else {
+                [self.tooLargeToSyncScreenshotTipsView startAnimation];
+            }
+            [self.view setNeedsLayout:YES];
+        }
+    }
+    {
+        BOOL showTips = (item && item.isUserCustom);
+        BOOL shouldHide = !showTips;
+        if (self.customViewTipView.hidden != shouldHide) {
+            self.customViewTipView.hidden = shouldHide;
+            [self.view setNeedsLayout:YES];
+        }
+    }
+}
 
 - (LKStaticWindowController *)_staticWindowController {
     NSWindowController *windowController = self.view.window.windowController;

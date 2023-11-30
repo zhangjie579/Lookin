@@ -25,10 +25,14 @@
 #import "LKStaticAsyncUpdateManager.h"
 #import "LKTutorialManager.h"
 #import "LookinHierarchyFile.h"
-#import "LookinPreviewView.h"
+#import "LKPreviewView.h"
 #import "LKHierarchyView.h"
 #import "KcDoubleSlide.h"
 #import "LKPerformanceReporter.h"
+#import "LKMessageManager.h"
+#import "LKServerVersionRequestor.h"
+#import "LKVersionComparer.h"
+
 @import AppCenter;
 @import AppCenterAnalytics;
 
@@ -39,8 +43,6 @@
 /// 当拉取 hierarchy 和更新截图时，该属性为 YES
 @property(nonatomic, assign) BOOL isFetchingHierarchy;
 @property(nonatomic, assign) BOOL isSyncingScreenshots;
-
-@property(nonatomic, strong) RACSubject *removeDelayReloadCounting_Signal;
 
 @end
 
@@ -126,12 +128,6 @@
             BOOL canMeasure = !!x;
             measureButton.enabled = canMeasure;
         }];
-
-        self.removeDelayReloadCounting_Signal = [RACSubject subject];
-        [self.removeDelayReloadCounting_Signal subscribeNext:^(id  _Nullable x) {
-            @strongify(self);
-            [self.viewController removeDelayReloadTip];
-        }];
     }
     return self;
 }
@@ -150,11 +146,7 @@
             [popover close];
 
             if (app.serverVersionError) {
-                if (app.serverVersionError.code == LookinErrCode_ServerIsPrivate ||
-                    app.serverVersionError.code == LookinErrCode_ClientIsPrivate) {
-                    // nothing;
-
-                } else if (app.serverVersionError.code == LookinErrCode_ServerVersionTooLow) {
+                if (app.serverVersionError.code == LookinErrCode_ServerVersionTooLow) {
                     [LKHelper openLookinWebsiteWithPath:@"faq/server-version-too-low/"];
                 } else {
                     [LKHelper openLookinWebsiteWithPath:@"faq/server-version-too-high/"];
@@ -195,7 +187,16 @@
 }
 
 - (NSArray<NSToolbarItemIdentifier> *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar {
-    return @[LKToolBarIdentifier_Reload, LKToolBarIdentifier_App, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Dimension, LKToolBarIdentifier_Rotation, LKToolBarIdentifier_Setting, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Scale, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_AdjustVisableOfViews, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_focusOnSelectedView, LKToolBarIdentifier_Measure, LKToolBarIdentifier_Console];
+    NSMutableArray *ret = @[LKToolBarIdentifier_Reload, LKToolBarIdentifier_App, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Dimension, LKToolBarIdentifier_Rotation, LKToolBarIdentifier_Setting, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Scale,
+        // 添加
+        NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_AdjustVisableOfViews, NSToolbarFlexibleSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_focusOnSelectedView,
+                            LKToolBarIdentifier_Measure, LKToolBarIdentifier_Console].mutableCopy;
+    
+    if ([[[LKMessageManager sharedInstance] queryMessages] count] > 0) {
+        [ret addObject:LKToolBarIdentifier_Message];
+        [MSACAnalytics trackEvent:@"Show Notification"];
+    }
+    return [ret copy];;
 }
 
 - (nullable NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag {
@@ -227,7 +228,10 @@
             [[[RACObserve(self.viewController, showConsole) distinctUntilChanged] skip:1] subscribeNext:^(NSNumber *x) {
                 ((NSButton *)item.view).state = x.boolValue ? NSControlStateValueOn : NSControlStateValueOff;
             }];
-
+        } else if ([item.itemIdentifier isEqualToString:LKToolBarIdentifier_Message]) {
+            item.label = NSLocalizedString(@"Notifications", nil);
+            item.target = self;
+            item.action = @selector(_handleMessage:);
         }
     }
     return item;
@@ -241,9 +245,6 @@
 }
 
 - (void)_handleReload {
-    // 停止可能存在的刷新倒计时
-    [self.removeDelayReloadCounting_Signal sendNext:nil];
-
     if (self.isSyncingScreenshots) {
         // 停止拉取
         [[LKStaticAsyncUpdateManager sharedInstance] endUpdatingAll];
@@ -285,8 +286,6 @@
 
 - (void)_handleApp {
     // 停止可能存在的刷新倒计时
-    [self.removeDelayReloadCounting_Signal sendNext:nil];
-
     [self popupAllInspectableAppsWithSource:MenuPopoverAppsListControllerEventSourceAppButton];
 }
 
@@ -301,6 +300,88 @@
 
 - (void)_handleConsole {
     self.viewController.showConsole = !self.viewController.showConsole;
+}
+
+- (void)_handleMessage:(NSButton *)button {
+    NSMenu *menu = [NSMenu new];
+    
+    NSArray<NSString *> *msgs = [[LKMessageManager sharedInstance] queryMessages];
+    for (NSString *msg in msgs) {
+        if ([msg isEqualToString:LKMessage_Jobs]) {
+            [menu addItem:({
+                NSMenuItem *menuItem = [NSMenuItem new];
+                menuItem.image = [NSImage imageNamed:@"Icon_Inspiration_small"];
+                menuItem.title = NSLocalizedString(@"Job openings…(China)", nil);
+                menuItem.target = self;
+                menuItem.action = @selector(handleJobsMenuItem);
+                menuItem;
+            })];
+            [menu addItem:[NSMenuItem separatorItem]];
+            continue;
+        }
+        
+        if ([msg isEqualToString:LKMessage_NewServerVersion]) {
+            [menu addItem:({
+                NSMenuItem *menuItem = [NSMenuItem new];
+                menuItem.image = [NSImage imageNamed:@"Icon_Inspiration_small"];
+                NSString *userVersion = [[[LKAppsManager.sharedInstance inspectingApp] appInfo] serverReadableVersion];
+                NSString *newestVersion = [[LKServerVersionRequestor shared] query];
+                if (userVersion.length > 0) {
+                    NSString *format = NSLocalizedString(@"Your iOS project uses version %@ of the LookinServer SDK, while the latest version online is %@, it is recommended to upgrade.", nil);
+                    menuItem.title = [NSString stringWithFormat:format, userVersion, newestVersion];
+                } else {
+                    NSString *format = NSLocalizedString(@"Your iOS project uses an outdated version of the LookinServer SDK. It is recommended to upgrade to the latest version %@", nil);
+                    menuItem.title = [NSString stringWithFormat:format, newestVersion];
+                }
+                menuItem;
+            })];
+            [menu addItem:({
+                NSMenuItem *menuItem = [NSMenuItem new];
+                menuItem.image = [[NSImage alloc] initWithSize:NSMakeSize(18, 1)];
+                menuItem.title = NSLocalizedString(@"Check out version updates on GitHub…", nil);
+                menuItem.target = self;
+                menuItem.action = @selector(handleVersionsHistory);
+                menuItem;
+            })];
+            [menu addItem:[NSMenuItem separatorItem]];
+            continue;
+        }
+        
+        if ([msg isEqualToString:LKMessage_SwiftSubspec]) {
+            [menu addItem:({
+                NSMenuItem *menuItem = [NSMenuItem new];
+                menuItem.image = [NSImage imageNamed:@"Icon_Inspiration_small"];
+                menuItem.title = NSLocalizedString(@"Your iOS project seems to use Swift, but you haven't turn on Swift optimization for Lookin", nil);
+                menuItem;
+            })];
+            [menu addItem:({
+                NSMenuItem *menuItem = [NSMenuItem new];
+                menuItem.image = [[NSImage alloc] initWithSize:NSMakeSize(18, 1)];
+                menuItem.title = NSLocalizedString(@"How to turn on…", nil);
+                menuItem.target = self;
+                menuItem.action = @selector(handleTurnOnSwift);
+                menuItem;
+            })];
+            [menu addItem:[NSMenuItem separatorItem]];
+            continue;
+        }
+    }
+
+    if (menu.numberOfItems == 0) {
+        [menu addItem:({
+            NSMenuItem *menuItem = [NSMenuItem new];
+            menuItem.title = NSLocalizedString(@"No message", nil);
+            menuItem;
+        })];
+    }
+    
+    [NSMenu popUpContextMenu:menu withEvent:[[NSApplication sharedApplication] currentEvent] forView:button];
+    
+    [MSACAnalytics trackEvent:@"Open Notification" withProperties:@{
+        @"Jobs": [NSString stringWithFormat:@"%@", @([msgs containsObject:LKMessage_Jobs])],
+        @"SwiftSubspec": [NSString stringWithFormat:@"%@", @([msgs containsObject:LKMessage_SwiftSubspec])],
+        @"LowServer": [NSString stringWithFormat:@"%@", @([msgs containsObject:LKMessage_NewServerVersion])],
+    }];
 }
 
 - (void)_handleFreeRotation {
@@ -440,28 +521,17 @@
     [[self.viewController currentHierarchyView] activateSearchBar];
 }
 
-- (void)appMenuManagerDidSelectDelayReload {
-    [self.removeDelayReloadCounting_Signal sendNext:nil];
-
-    __block NSUInteger seconds = 5;
-    [self.viewController showDelayReloadTipWithSeconds:seconds];
-    @weakify(self);
-    [[[[RACSignal interval:1 onScheduler:[RACScheduler scheduler]] takeUntil:self.removeDelayReloadCounting_Signal] deliverOnMainThread] subscribeNext:^(NSDate * _Nullable x) {
-        @strongify(self);
-        seconds--;
-        if (seconds <= 0) {
-            [self.removeDelayReloadCounting_Signal sendNext:nil];
-            [self appMenuManagerDidSelectReload];
-        } else {
-            [self.viewController showDelayReloadTipWithSeconds:seconds];
-        }
-    }];
-
-    [MSACAnalytics trackEvent:@"Delay Reload"];
+- (void)handleJobsMenuItem {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://bytedance.feishu.cn/docx/SAcgdoQuAouyXAxAqy8cmrT2n4b"]];
+    [[LKMessageManager sharedInstance] removeMessage:LKMessage_Jobs];
 }
 
-- (void)appMenuManagerDidSelectMethodTrace {
-    [[LKNavigationManager sharedInstance] showMethodTrace];
+- (void)handleVersionsHistory {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/QMUI/LookinServer/releases"]];
+}
+
+- (void)handleTurnOnSwift {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://bytedance.feishu.cn/docx/GFRLdzpeKoakeyxvwgCcZ5XdnTb"]];
 }
 
 /// 刷新数据源

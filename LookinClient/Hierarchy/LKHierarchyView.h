@@ -9,7 +9,7 @@
 #import "LKBaseView.h"
 #import "LKHierarchyRowView.h"
 
-@class LKHierarchyView, LKTableView;
+@class LKHierarchyView, LKTableView, LKHierarchyDataSource;
 
 @protocol LKHierarchyViewDelegate <NSObject>
 
@@ -39,10 +39,12 @@
 
 @interface LKHierarchyView : LKBaseView
 
+- (instancetype)initWithDataSource:(LKHierarchyDataSource *)dataSource;
+
 @property(nonatomic, strong, readonly) LKTableView *tableView;
 
-@property(nonatomic, copy) NSArray<LookinDisplayItem *> *displayItems;
-
+@property(nonatomic, strong) LKHierarchyDataSource *dataSource;
+          
 @property(nonatomic, weak) id<LKHierarchyViewDelegate> delegate;
 
 - (void)scrollToMakeItemVisible:(LookinDisplayItem *)item;

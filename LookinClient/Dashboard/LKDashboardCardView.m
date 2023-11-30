@@ -20,18 +20,21 @@
 #import "LKDashboardCardTitleControl.h"
 #import "LKDashboardAccessoryWindowController.h"
 #import "LKUserActionManager.h"
+#import "LookinAttributesGroup+LookinClient.h"
+#import "LookinAttributesSection+LookinClient.h"
+#import "LKDashboardSectionViewPool.h"
 
 @interface LKDashboardCardView () <LKUserActionManagerDelegate, LKDashboardAccessoryWindowControllerDelegate>
 
 @property(nonatomic, strong) LKVisualEffectView *backgroundEffectView;
 @property(nonatomic, strong) LKDashboardCardTitleControl *titleControl;
 @property(nonatomic, strong) NSButton *detailButton;
+@property(nonatomic, strong) NSButton *relationHelpButton;
 
 @property(nonatomic, strong) LKBaseView *fadeView;
 
-
-/// key 是 LookinAttrSectionIdentifier
-@property(nonatomic, strong) NSMutableDictionary<LookinAttrSectionIdentifier, LKDashboardSectionView *> *sectionViews;
+@property(nonatomic, strong) LKDashboardSectionViewPool *sectionViewPool;
+@property(nonatomic, strong) NSMutableArray<LKDashboardSectionView *> *sectionViews;
 
 @property(nonatomic, strong) LKDashboardAccessoryWindowController *accessoryWC;
 
@@ -49,6 +52,7 @@
         _titleHeight = 30;
         _contentsY = 35;
         _insetBottom = 12;
+        self.sectionViews = [NSMutableArray array];
         
         self.layer.cornerRadius = DashboardCardCornerRadius;
         
@@ -66,7 +70,7 @@
         self.detailButton.bordered = NO;
         [self addSubview:self.detailButton];
         
-        self.sectionViews = [NSMutableDictionary dictionary];
+        self.sectionViewPool = [LKDashboardSectionViewPool new];
         
         [self updateColors];
         
@@ -83,17 +87,16 @@
     if (self.detailButton.isVisible) {
         $(self.detailButton).width(50).height(28).right(-3).y(0);
     }
+    if (self.relationHelpButton.isVisible) {
+        $(self.relationHelpButton).width(30).height(28).right(5).y(0);
+    }
     
     if (!self.attrGroup || !self.sectionViews.count) {
         return;
     }
     
     __block CGFloat y = _contentsY;
-    [[LookinDashboardBlueprint sectionIDsForGroupID:self.attrGroup.identifier] enumerateObjectsUsingBlock:^(LookinAttrSectionIdentifier _Nonnull secID, NSUInteger idx, BOOL * _Nonnull stop) {
-        LKDashboardSectionView *view = self.sectionViews[secID];
-        if (!view.isVisible) {
-            return;
-        }
+    [self.sectionViews enumerateObjectsUsingBlock:^(LKDashboardSectionView * _Nonnull view, NSUInteger idx, BOOL * _Nonnull stop) {
         $(view).x(DashboardHorInset).toRight(DashboardHorInset).heightToFit.y(y);
         y = view.$maxY + DashboardSectionMarginTop;
     }];
@@ -106,11 +109,8 @@
     }
     limitedSize.width -= DashboardHorInset * 2;
     __block CGFloat height = _contentsY;
-    [self.sectionViews enumerateKeysAndObjectsUsingBlock:^(LookinAttrSectionIdentifier _Nonnull key, LKDashboardSectionView * _Nonnull view, BOOL * _Nonnull stop) {
-        if (!view.isVisible) {
-            return;
-        }
-        CGFloat sectionHeight = [view sizeThatFits:limitedSize].height;
+    [self.sectionViews enumerateObjectsUsingBlock:^(LKDashboardSectionView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        CGFloat sectionHeight = [obj sizeThatFits:limitedSize].height;
         height += (sectionHeight + DashboardSectionMarginTop);
     }];
     height -= DashboardSectionMarginTop;
@@ -133,63 +133,45 @@
         _contentsY = 35;
     }
     
-    self.titleControl.label.stringValue = [LookinDashboardBlueprint groupTitleWithGroupID:self.attrGroup.identifier];
-    self.titleControl.iconImageView.image = [self _imageWithAttrGroupIdentifier:self.attrGroup.identifier];
+    self.titleControl.label.stringValue = [self.attrGroup queryDisplayTitle];
+    self.titleControl.iconImageView.image = [LKDashboardCardView imageWithAttrGroup:self.attrGroup];
     [self.titleControl setNeedsLayout:YES];
     
     self.detailButton.hidden = ![self _shouldShowDetailButtonWithGroupID:self.attrGroup.identifier];
     
-    NSMutableArray<LKDashboardSectionView *> *needlessViews = [NSMutableArray array];
-    [self.sectionViews enumerateKeysAndObjectsUsingBlock:^(LookinAttrSectionIdentifier _Nonnull key, LKDashboardSectionView * _Nonnull view, BOOL * _Nonnull stop) {
-        [needlessViews addObject:view];
+    [self.sectionViews enumerateObjectsUsingBlock:^(LKDashboardSectionView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [obj removeFromSuperview];
     }];
-    
-    NSArray<LookinAttrSectionIdentifier> *allSecIDs = [LookinDashboardBlueprint sectionIDsForGroupID:self.attrGroup.identifier];
-    NSArray<LookinAttrSectionIdentifier> *availableSecIDs = nil;
-    if (allSecIDs.count > 1) {
-        availableSecIDs = [allSecIDs lookin_filter:^BOOL(LookinAttrSectionIdentifier obj) {
-            return [[LKPreferenceManager mainManager] isSectionShowing:obj];
-        }];
-    } else {
-        availableSecIDs = allSecIDs;
-    }
+    [self.sectionViews removeAllObjects];
+    [self.sectionViewPool recycleAll];
 
-    __block BOOL shouldShowTopSeparator = NO;
-    [availableSecIDs enumerateObjectsUsingBlock:^(LookinAttrSectionIdentifier _Nonnull secID, NSUInteger idx, BOOL * _Nonnull stop) {
-        LookinAttributesSection *section = [self.attrGroup.attrSections lookin_firstFiltered:^BOOL(LookinAttributesSection *obj) {
-            return [obj.identifier isEqualToString:secID];
-        }];
-        if (!section) {
+    [self.attrGroup.attrSections enumerateObjectsUsingBlock:^(LookinAttributesSection * _Nonnull sec, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (sec.identifier != LookinAttrSec_KcDebugMethod_Class && !sec.isUserCustom && ![[LKPreferenceManager mainManager] isSectionShowing:sec.identifier]) {
             return;
         }
         
-        LKDashboardSectionView *view = self.sectionViews[secID];
-        if (view) {
-            view.hidden = NO;
-            [needlessViews removeObject:view];
-        } else {
-            view = [LKDashboardSectionView new];
-            view.dashboardViewController = self.dashboardViewController;
-            [self addSubview:view];
-            self.sectionViews[secID] = view;
-        }
+        LKDashboardSectionView *secView = [self.sectionViewPool dequeViewForSection:sec];
+        [self.sectionViews addObject:secView];
+        [self addSubview:secView];
+        secView.dashboardViewController = self.dashboardViewController;
+        secView.attrSection = sec;
+        secView.showTopSeparator = (idx > 0);
         
-        view.attrSection = section;
-        view.showTopSeparator = shouldShowTopSeparator;
-        shouldShowTopSeparator = YES;
         if (self.accessoryWC) {
-            view.manageState = LKDashboardSectionManageState_CanRemove;
+            secView.manageState = LKDashboardSectionManageState_CanRemove;
         } else {
-            view.manageState = LKDashboardSectionManageState_None;
+            secView.manageState = LKDashboardSectionManageState_None;
         }
-    }];
-    
-    [needlessViews enumerateObjectsUsingBlock:^(LKDashboardSectionView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        obj.hidden = YES;
     }];
     
     if (self.accessoryWC) {
         [self _renderAccessoryWindowController];
+    }
+    
+    if ([self.attrGroup.identifier isEqualToString:LookinAttrGroup_Relation]) {
+        [self showRelationHelpButton];
+    } else {
+        [self hideRelationHelpButton];
     }
     
     [self setNeedsLayout:YES];
@@ -198,10 +180,6 @@
 - (void)setIsCollapsed:(BOOL)isCollapsed {
     _isCollapsed = isCollapsed;
     self.titleControl.disclosureImageView.image = isCollapsed ? NSImageMake(@"icon_arrow_right") : NSImageMake(@"icon_arrow_down");
-}
-
-- (LKDashboardSectionView *)sectionViewWithID:(LookinAttrSectionIdentifier)secID {
-    return self.sectionViews[secID];
 }
 
 - (void)playFadeAnimationWithHighlightRect:(CGRect)rect {
@@ -268,7 +246,7 @@
     }
 }
 
-- (NSImage *)_imageWithAttrGroupIdentifier:(LookinAttrGroupIdentifier)identifier {
++ (NSImage *)imageWithAttrGroup:(LookinAttributesGroup *)group {
     static dispatch_once_t onceToken;
     static NSDictionary<LookinAttrGroupIdentifier, NSImage *> *dict = nil;
     dispatch_once(&onceToken,^{
@@ -287,12 +265,35 @@
                  LookinAttrGroup_UITextView: NSImageMake(@"dashboard_textview"),
                  LookinAttrGroup_UITextField: NSImageMake(@"dashboard_textfield"),
                  LookinAttrGroup_UIVisualEffectView: NSImageMake(@"dashboard_effectview"),
+                 LookinAttrGroup_UIStackView: NSImageMake(@"dashboard_stackview"),
+                 LookinAttrGroup_UserCustom: NSImageMake(@"dashboard_custom"),
+                 
                  LookinAttrGroup_KcDebugMethod: NSImageMake(@"icon_3d"),
                  };
     });
-    NSImage *image = dict[identifier];
+    NSImage *image = dict[group.identifier];
     NSAssert(image, @"");
     return image;
+}
+
+- (LKDashboardSectionView *)querySectionViewWithSection:(LookinAttributesSection *)sec {
+    return [self.sectionViews lookin_firstFiltered:^BOOL(LKDashboardSectionView *obj) {
+        return obj.attrSection == sec;
+    }];
+}
+
+- (void)showRelationHelpButton {
+    if (!self.relationHelpButton) {
+        self.relationHelpButton = [NSButton buttonWithImage:NSImageMake(@"ic_question") target:self action:@selector(_handleRelationHelpButton)];
+        self.relationHelpButton.bezelStyle = NSBezelStyleRoundRect;
+        self.relationHelpButton.bordered = NO;
+        [self addSubview:self.detailButton];
+    }
+    [self addSubview:self.relationHelpButton];
+}
+
+- (void)hideRelationHelpButton {
+    [self.relationHelpButton removeFromSuperview];
 }
 
 #pragma mark - Others
@@ -346,10 +347,8 @@
         return;
     }
     
-    [self.sectionViews enumerateKeysAndObjectsUsingBlock:^(LookinAttrSectionIdentifier _Nonnull key, LKDashboardSectionView * _Nonnull secView, BOOL * _Nonnull stop) {
-        if (secView.isVisible) {
-            secView.manageState = LKDashboardSectionManageState_CanRemove;
-        }
+    [self.sectionViews enumerateObjectsUsingBlock:^(LKDashboardSectionView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        obj.manageState = LKDashboardSectionManageState_CanRemove;
     }];
     
     NSArray<LookinAttrSectionIdentifier> *allSecIDs = [LookinDashboardBlueprint sectionIDsForGroupID:self.attrGroup.identifier];
@@ -389,19 +388,39 @@
 }
 
 - (void)dashboardAccessoryWindowControllerWillClose:(LKDashboardAccessoryWindowController *)controller {
-    [self.sectionViews enumerateKeysAndObjectsUsingBlock:^(LookinAttrSectionIdentifier _Nonnull key, LKDashboardSectionView * _Nonnull secView, BOOL * _Nonnull stop) {
+    [self.sectionViews enumerateObjectsUsingBlock:^(LKDashboardSectionView * _Nonnull secView, NSUInteger idx, BOOL * _Nonnull stop) {
         secView.manageState = LKDashboardSectionManageState_None;
     }];
     self.accessoryWC = nil;
 }
 
 - (BOOL)_shouldShowDetailButtonWithGroupID:(LookinAttrGroupIdentifier)identifier {
+    if ([identifier isEqualToString:LookinAttrGroup_UserCustom]) {
+        return NO;
+    }
     NSUInteger sectionCount = [LookinDashboardBlueprint sectionIDsForGroupID:identifier].count;
     if (sectionCount > 1) {
         return YES;
     } else {
         return NO;
     }
+}
+
+- (void)_handleRelationHelpButton {
+    NSMenu *menu = [NSMenu new];
+    
+    NSMenuItem *menuItem = [NSMenuItem new];
+    menuItem.image = NSImageMake(@"Icon_Inspiration_small");
+    menuItem.title = NSLocalizedString(@"How to display more member variables…", nil);
+    menuItem.target = self;
+    menuItem.action = @selector(handleRelationDocument);
+    [menu addItem:menuItem];
+    
+    [NSMenu popUpContextMenu:menu withEvent:NSApplication.sharedApplication.currentEvent forView:self.relationHelpButton];
+}
+
+- (void)handleRelationDocument {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://bytedance.larkoffice.com/docx/CKRndHqdeoub11xSqUZcMlFhnWe"]];
 }
 
 @end

@@ -8,14 +8,15 @@
 
 #import "LKPreferenceManager.h"
 #import "LookinDashboardBlueprint.h"
-#import "LookinPreviewView.h"
+#import "LKPreviewView.h"
+#import "LKTutorialManager.h"
 @import AppCenter;
+@import AppCenterAnalytics;
 
 NSString *const NotificationName_DidChangeSectionShowing = @"NotificationName_DidChangeSectionShowing";
 
 NSString *const LKWindowSizeName_Dynamic = @"LKWindowSizeName_Dynamic";
 NSString *const LKWindowSizeName_Static = @"LKWindowSizeName_Static";
-NSString *const LKWindowSizeName_Methods = @"LKWindowSizeName_Methods";
 
 const CGFloat LKInitialPreviewScale = 0.27;
 
@@ -26,6 +27,7 @@ static NSString * const Key_EnableReport = @"enableReport";
 static NSString * const Key_RgbaFormat = @"egbaFormat";
 static NSString * const Key_ZInterspace = @"zInterspace_v095";
 static NSString * const Key_AppearanceType = @"appearanceType";
+static NSString * const Key_DoubleClickBehavior = @"doubleClickBehavior";
 static NSString * const Key_ExpansionIndex = @"expansionIndex";
 static NSString * const Key_SectionsShow = @"ss";
 static NSString * const Key_CollapsedGroups = @"collapsedGroups_918";
@@ -95,6 +97,14 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
         } else {
             _enableReport = YES;
             [userDefaults setObject:@(_enableReport) forKey:Key_EnableReport];
+        }
+        
+        NSNumber *obj_doubleClickBehavior = [userDefaults objectForKey:Key_DoubleClickBehavior];
+        if (obj_doubleClickBehavior) {
+            _doubleClickBehavior = [obj_doubleClickBehavior intValue];
+        } else {
+            _doubleClickBehavior = LookinDoubleClickBehaviorCollapse;
+            [userDefaults setObject:@(_doubleClickBehavior) forKey:Key_DoubleClickBehavior];
         }
         
         NSNumber *obj_rgbaFormat = [userDefaults objectForKey:Key_RgbaFormat];
@@ -210,7 +220,14 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
     }
 }
 
-- (void)setAppearanceType:(LookinPreferredAppeanranceType)appearanceType {    
+- (void)setDoubleClickBehavior:(LookinDoubleClickBehavior)doubleClickBehavior {
+    _doubleClickBehavior = doubleClickBehavior;
+    if (self.shouldStoreToLocal) {
+        [[NSUserDefaults standardUserDefaults] setObject:@(doubleClickBehavior) forKey:Key_DoubleClickBehavior];
+    }
+}
+
+- (void)setAppearanceType:(LookinPreferredAppeanranceType)appearanceType {
     if (_appearanceType == appearanceType) {
         return;
     }
@@ -350,6 +367,11 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
                                                         LookinAttrSec_ViewLayer_Border,
                                                         LookinAttrSec_ViewLayer_Shadow,
                                                         
+                                                        LookinAttrSec_UIStackView_Axis,
+                                                        LookinAttrSec_UIStackView_Alignment,
+                                                        LookinAttrSec_UIStackView_Distribution,
+                                                        LookinAttrSec_UIStackView_Spacing,
+                                                        
                                                         LookinAttrSec_UIVisualEffectView_Style,
                                                         LookinAttrSec_UIVisualEffectView_QMUIForegroundColor,
                                                         
@@ -393,6 +415,45 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
         targetSet = [NSSet setWithArray:array];
     });
     return targetSet;
+}
+
++ (BOOL)popupToAskDoubleClickBehaviorIfNeededWithWindow:(NSWindow *)window {
+    if (!window) {
+        return NO;
+    }
+    if ([LKTutorialManager sharedInstance].hasAskedDoubleClickBehavior) {
+        return NO;
+    }
+    NSAlert *alert = [NSAlert new];
+    alert.messageText = NSLocalizedString(@"What do you want to happen when you double click the layer?", nil);
+    alert.informativeText = NSLocalizedString(@"You can change it at any time in your Preferences.", nil);
+    alert.alertStyle = NSAlertStyleInformational;
+    [alert addButtonWithTitle:NSLocalizedString(@"Expand or collapse layer", nil)];
+    [alert addButtonWithTitle:NSLocalizedString(@"Focus on layer", nil)];
+    [alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse returnCode) {
+        if (returnCode == NSAlertFirstButtonReturn) {
+            // collapse
+            [LKPreferenceManager mainManager].doubleClickBehavior = LookinDoubleClickBehaviorCollapse;
+        } else {
+            // focus
+            [LKPreferenceManager mainManager].doubleClickBehavior = LookinDoubleClickBehaviorFocus;
+        }
+    }];
+    [LKTutorialManager sharedInstance].hasAskedDoubleClickBehavior = YES;
+    return YES;
+}
+
+- (void)reset {
+    [LKTutorialManager sharedInstance].hasAskedDoubleClickBehavior = NO;
+}
+
+- (void)reportStatistics {
+    [MSACAnalytics trackEvent:@"Preference" withProperties:@{
+        @"DoubleClick": [NSString stringWithFormat:@"%@", @(self.doubleClickBehavior)],
+        @"ShowHidden": [NSString stringWithFormat:@"%@", @(self.showHiddenItems.currentBOOLValue)],
+        @"RGBA": [NSString stringWithFormat:@"%@", @(self.rgbaFormat)],
+        @"FreeRotation": [NSString stringWithFormat:@"%@", @(self.freeRotation.currentBOOLValue)],
+    }];
 }
 
 @end

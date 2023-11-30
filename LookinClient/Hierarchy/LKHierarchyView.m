@@ -16,9 +16,11 @@
 #import "LKNavigationManager.h"
 #import "LKTutorialManager.h"
 #import "LKTextFieldView.h"
+#import "LKTipsView.h"
 
 static NSString * const kMenuBindKey_RowView = @"view";
 static CGFloat const kRowHeight = 28;
+extern NSString *const LKAppShowConsoleNotificationName;
 
 @interface LKHierarchyView () <LKTableViewDelegate, LKTableViewDataSource, NSMenuDelegate, NSTextFieldDelegate>
 
@@ -30,18 +32,24 @@ static CGFloat const kRowHeight = 28;
 
 @property(nonatomic, strong) LKLabel *emptyDataLabel;
 
+@property(nonatomic, copy) NSArray<LookinDisplayItem *> *displayItems;
+
+@property(nonatomic, assign) NSInteger minIndentLevel;
+
 @end
 
 @implementation LKHierarchyView
 
-- (instancetype)initWithFrame:(NSRect)frameRect {
-    if (self = [super initWithFrame:frameRect]) {        
+- (instancetype)initWithDataSource:(LKHierarchyDataSource *)dataSource {
+    if (self = [super initWithFrame:CGRectZero]) {
+        self.dataSource = dataSource;
+        
         self.backgroundEffectView = [LKVisualEffectView new];
         self.backgroundEffectView.material = NSVisualEffectMaterialSidebar;
         self.backgroundEffectView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
         self.backgroundEffectView.state = NSVisualEffectStateActive;
         [self addSubview:self.backgroundEffectView];
-        
+
         _tableView = [LKTableView new];
         self.tableView.adjustsSelectionAutomatically = NO;
         self.tableView.delegate = self;
@@ -86,10 +94,40 @@ static CGFloat const kRowHeight = 28;
             CGFloat insetTop = [x edgeInsetsValue].top;
             [LKNavigationManager sharedInstance].windowTitleBarHeight = insetTop;
         }];
-    
-        [[RACObserve(self, displayItems) throttle:.75] subscribeNext:^(id  _Nullable x) {
+        
+        [RACObserve(dataSource, selectedItem) subscribeNext:^(LookinDisplayItem * _Nullable item) {
+            @strongify(self);
+            [self.tableView reloadDataWithOffset];
+            [self scrollToMakeItemVisible:item];
+        }];
+        
+        [[RACObserve(self.dataSource, hoveredItem) distinctUntilChanged] subscribeNext:^(LookinDisplayItem * _Nullable x) {
+            @strongify(self);
+            [self updateGuidesWithHoveredItem:x];
+        }];
+        
+        [RACObserve(dataSource, displayingFlatItems) subscribeNext:^(NSArray<LookinDisplayItem *> *x) {
+            @strongify(self);
+            [self renderWithDisplayItems:x];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self updateGuidesWithHoveredItem:self.dataSource.hoveredItem];
+            });
+        }];
+        [[RACObserve(dataSource, displayingFlatItems) throttle:.75] subscribeNext:^(id  _Nullable x) {
             @strongify(self);
             [self _bringGuidesLayerToFront];
+        }];
+        [RACObserve(dataSource, state) subscribeNext:^(NSNumber *x) {
+            @strongify(self);
+            // 隐藏搜索功能，避免同时处于 focus 和 search 状态，从而避免状态维护太过复杂
+            LKHierarchyDataSourceState state = x.unsignedIntegerValue;
+            BOOL isFocus = (state == LKHierarchyDataSourceStateFocus);
+            self.searchTextFieldView.hidden = isFocus;
+            
+            if (isFocus && self.searchTextFieldView.textField.stringValue.length > 0) {
+                self.searchTextFieldView.textField.stringValue = @"";
+                [self.window makeFirstResponder:nil];
+            }
         }];
         
         [self updateColors];
@@ -101,7 +139,10 @@ static CGFloat const kRowHeight = 28;
     [super layout];
     $(self.backgroundEffectView).fullFrame;
     $(self.searchTextFieldView).fullWidth.height(25).bottom(0);
+
+    $(self.tableView).fullFrame.y(self.searchTextFieldView.$y);
     $(self.tableView).fullFrame.toMaxY(self.searchTextFieldView.$y);
+
     $(self.guidesShapeLayer).frame(CGRectZero);
     
     if (self.emptyDataLabel.isVisible) {
@@ -109,8 +150,14 @@ static CGFloat const kRowHeight = 28;
     }
 }
 
-- (void)setDisplayItems:(NSArray<LookinDisplayItem *> *)displayItems {
-    _displayItems = displayItems.copy;
+- (void)renderWithDisplayItems:(NSArray<LookinDisplayItem *> *)displayItems {
+    self.displayItems = displayItems;
+    
+    _minIndentLevel = [[displayItems lookin_reduce:^NSNumber *(NSNumber *accumulator, NSUInteger idx, LookinDisplayItem *obj) {
+        NSInteger res = accumulator ? MIN(accumulator.integerValue, obj.indentLevel):obj.indentLevel;
+        return @(res);
+    }] integerValue];
+    
     [self.tableView reloadData];
     
     if (displayItems.count == 0) {
@@ -185,7 +232,7 @@ static CGFloat const kRowHeight = 28;
     
     LKHierarchyRowView *view = [tableView makeViewWithIdentifier:@"cell" owner:self];
     if (!view) {
-        view = [[LKHierarchyRowView alloc] init];
+        view = [[LKHierarchyRowView alloc] initWithDataSource:self.dataSource];
         view.disclosureButton.target = self;
         view.disclosureButton.action = @selector(_handleDisclosureButton:);
         view.identifier = @"cell";
@@ -196,7 +243,9 @@ static CGFloat const kRowHeight = 28;
         view.menu.delegate = self;
     }
     
+    view.minIndentLevel = self.minIndentLevel;
     view.displayItem = item;
+    
     view.disclosureButton.tag = row;
     return view;
 }
@@ -233,7 +282,25 @@ static CGFloat const kRowHeight = 28;
     LookinDisplayItem *displayItem = rowView.displayItem;
     
     [menu removeAllItems];
-    
+
+    if (!displayItem.isUserCustom) {
+        [menu addItem:({
+            NSMenuItem *item = [NSMenuItem new];
+            item.target = self;
+            item.action = @selector(_handleFocusCurrentItem:);
+            item.title = NSLocalizedString(@"Focus", nil);
+            item;
+        })];
+        [menu addItem:({
+            NSMenuItem *item = [NSMenuItem new];
+            item.target = self;
+            item.action = @selector(_handlePrintItem:);
+            item.title = NSLocalizedString(@"Print", nil);
+            item;
+        })];
+        [menu addItem:[NSMenuItem separatorItem]];        
+    }
+
     if (displayItem.isExpandable) {
         [menu addItem:({
             NSMenuItem *item = [NSMenuItem new];
@@ -254,26 +321,28 @@ static CGFloat const kRowHeight = 28;
     // 显示和隐藏图像
     [menu addItem:[NSMenuItem separatorItem]];
     
-    if (displayItem.inNoPreviewHierarchy) {
-        [menu addItem:({
-            NSMenuItem *item = [NSMenuItem new];
-            item.target = self;
-            item.action = @selector(_handleShowPreview:);
-            if (displayItem.doNotFetchScreenshotReason == LookinFetchScreenshotPermitted) {
-                item.title = NSLocalizedString(@"Show screenshot", nil);
-            } else {
-                item.title = NSLocalizedString(@"Show layer border", nil);
-            }
-            item;
-        })];
-    } else {
-        [menu addItem:({
-            NSMenuItem *item = [NSMenuItem new];
-            item.target = self;
-            item.action = @selector(_handleCancelPreview:);
-            item.title = NSLocalizedString(@"Hide screenshot this time", nil);
-            item;
-        })];
+    if ([displayItem hasPreviewBoxAbility]) {
+        if (displayItem.inNoPreviewHierarchy) {
+            [menu addItem:({
+                NSMenuItem *item = [NSMenuItem new];
+                item.target = self;
+                item.action = @selector(_handleShowPreview:);
+                if (displayItem.doNotFetchScreenshotReason == LookinFetchScreenshotPermitted) {
+                    item.title = NSLocalizedString(@"Show screenshot", nil);
+                } else {
+                    item.title = NSLocalizedString(@"Show layer border", nil);
+                }
+                item;
+            })];
+        } else {
+            [menu addItem:({
+                NSMenuItem *item = [NSMenuItem new];
+                item.target = self;
+                item.action = @selector(_handleCancelPreview:);
+                item.title = NSLocalizedString(@"Hide screenshot this time", nil);
+                item;
+            })];
+        }
     }
     
     if (displayItem.groupScreenshot) {
@@ -285,7 +354,7 @@ static CGFloat const kRowHeight = 28;
             item;
         })];        
     }
-    
+
     // 复制文字
     NSMutableArray<NSString *> *stringsToCopy = [NSMutableArray array];
     
@@ -334,7 +403,7 @@ static CGFloat const kRowHeight = 28;
         })];
     }];
     
-    if (!displayItem.inNoPreviewHierarchy) {
+    if (!displayItem.isUserCustom && !displayItem.inNoPreviewHierarchy) {
         [menu addItem:[NSMenuItem separatorItem]];
         [menu addItem:({
             NSMenuItem *item = [NSMenuItem new];
@@ -357,8 +426,22 @@ static CGFloat const kRowHeight = 28;
     return NO;
 }
 
-
 #pragma mark - Events Handler
+- (void)_handlePrintItem:(NSMenuItem *)menuItem {
+    LKHierarchyRowView *view = [menuItem.menu lookin_getBindObjectForKey:kMenuBindKey_RowView];
+    LookinDisplayItem *item = view.displayItem;
+    [[NSNotificationCenter defaultCenter] postNotificationName:LKAppShowConsoleNotificationName object:item];
+}
+
+- (void)_handleFocusCurrentItem:(NSMenuItem *)menuItem {
+    LKHierarchyRowView *view = [menuItem.menu lookin_getBindObjectForKey:kMenuBindKey_RowView];
+    LookinDisplayItem *item = view.displayItem;
+    if (!item) {
+        NSAssert(NO, @"");
+        return;
+    }
+    [self.dataSource focusDisplayItem:item];
+}
 
 - (void)_handleSearchCloseButton {
     [self _exitAndClearSearch];
@@ -456,7 +539,7 @@ static CGFloat const kRowHeight = 28;
         return;
     }
     
-    CGFloat rootX = [LKHierarchyRowView dislosureMidXWithIndentLevel:rootItem.indentLevel];
+    CGFloat rootX = [LKHierarchyRowView dislosureMidXWithIndentLevel:rootItem.indentLevel - self.minIndentLevel];
     CGFloat rootY = kRowHeight * rootRow + kRowHeight / 2.0;
     CGFloat rootMaxY = [self.displayItems indexOfObject:childrenItems.lastObject] * kRowHeight + kRowHeight / 2.0;
 

@@ -17,6 +17,7 @@
 #import "LookinStaticAsyncUpdateTask.h"
 #import "LKNavigationManager.h"
 #import "LKPerformanceReporter.h"
+#import "LookinDisplayItem+LookinClient.h"
 
 @interface LKStaticAsyncUpdateManager ()
 
@@ -44,7 +45,6 @@
         _updateAll_ProgressSignal = [RACSubject subject];
         _updateAll_CompletionSignal = [RACSubject subject];
         _updateAll_ErrorSignal = [RACSubject subject];
-//        _updateAllErrorSignal = [RACSubject subject];
         _modifyingUpdateProgressSignal = [RACSubject subject];
         _modifyingUpdateErrorSignal = [RACSubject subject];
         
@@ -112,16 +112,25 @@
 
 - (NSArray<LookinStaticAsyncUpdateTask *> *)_makeScreenshotsAndAttrGroupsTasks {
     NSMutableArray<LookinStaticAsyncUpdateTask *> *tasks = [(NSArray<LookinDisplayItem *> *)self.dataSource.displayingFlatItems lookin_map:^id(NSUInteger idx, LookinDisplayItem *item) {
-        if (item.doNotFetchScreenshotReason != LookinFetchScreenshotPermitted) {
-            return [self _taskFromDisplayItem:item type:LookinStaticAsyncUpdateTaskTypeNoScreenshot];
-        } else if (item.isExpandable && item.isExpanded) {
-            return [self _taskFromDisplayItem:item type:LookinStaticAsyncUpdateTaskTypeSoloScreenshot];
+        if (item.isUserCustom) {
+            return nil;
+        }
+        if (item.doNotFetchScreenshotReason == LookinFetchScreenshotPermitted) {
+            if (item.isExpandable && item.isExpanded) {
+                return [self _taskFromDisplayItem:item type:LookinStaticAsyncUpdateTaskTypeSoloScreenshot];
+            } else {
+                return [self _taskFromDisplayItem:item type:LookinStaticAsyncUpdateTaskTypeGroupScreenshot];
+            }
+            
         } else {
-            return [self _taskFromDisplayItem:item type:LookinStaticAsyncUpdateTaskTypeGroupScreenshot];
+            return [self _taskFromDisplayItem:item type:LookinStaticAsyncUpdateTaskTypeNoScreenshot];
         }
     }].mutableCopy;
     
     [self.dataSource.flatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull item, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (item.isUserCustom) {
+            return;
+        }
         if (item.doNotFetchScreenshotReason != LookinFetchScreenshotPermitted) {
             LookinStaticAsyncUpdateTask *task = [self _taskFromDisplayItem:item type:LookinStaticAsyncUpdateTaskTypeNoScreenshot];
             if (![tasks containsObject:task]) {
@@ -182,6 +191,7 @@
     task.oid = item.layerObject.oid;
     task.frameSize = item.frame.size;
     task.taskType = type;
+    task.clientReadableVersion = [LKHelper lookinReadableVersion];
     return task;
 }
 

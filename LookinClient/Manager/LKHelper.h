@@ -8,7 +8,6 @@
 
 #import <Cocoa/Cocoa.h>
 #import "LookinDefines.h"
-#import "LookinMsgAttribute.h"
 
 #define InspectingApp [LKAppsManager sharedInstance].inspectingApp
 #define TutorialMng [LKTutorialManager sharedInstance]
@@ -72,7 +71,7 @@ CG_INLINE HorizontalMargins HorizontalMarginsMake(CGFloat left, CGFloat right) {
 
 + (NSFont *)italicFontOfSize:(CGFloat)fontSize;
 
-+ (NSString *)lookinVersion;
++ (NSString *)lookinReadableVersion;
 
 + (void)openLookinWebsiteWithPath:(NSString *)path;
 
@@ -94,5 +93,7 @@ CG_INLINE HorizontalMargins HorizontalMarginsMake(CGFloat left, CGFloat right) {
 /// macOS 10.14 及之后返回系统的 [NSTextView scrollableTextView]。10.13 由该方法自己实现。
 /// 当使用自己实现的版本时（即 10.13 系统），需要业务自己负责 textView（即  scrollableTextView.documentVie）的布局
 + (NSScrollView *)scrollableTextView;
+
++ (BOOL)validateFrame:(CGRect)frame;
 
 @end

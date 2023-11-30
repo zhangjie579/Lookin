@@ -31,7 +31,17 @@
 @property(nonatomic, assign) SEL clickAction;
 @property(nonatomic, copy) void (^didClick)(LKTipsView *tipsView);
 
+-(void)setInternalInsetsRight:(CGFloat)value;
+
 @end
+
+@interface LKYellowTipsView : LKTipsView
+
+- (void)startAnimation;
+- (void)endAnimation;
+
+@end
+
 
 @interface LKRedTipsView : LKTipsView
 

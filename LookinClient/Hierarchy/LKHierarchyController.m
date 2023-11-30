@@ -11,6 +11,8 @@
 #import "LookinDisplayItem.h"
 #import "LKTableView.h"
 #import "LKTutorialManager.h"
+#import "LKHierarchyDataSource+KeyDown.h"
+#import "LKPreferenceManager.h"
 
 @interface LKHierarchyController ()
 
@@ -18,27 +20,12 @@
 
 @implementation LKHierarchyController
 
-
 - (instancetype)initWithDataSource:(LKHierarchyDataSource *)dataSource {
-    if (self = [self initWithContainerView:nil]) {
+    LKHierarchyView *hierarchyView = [[LKHierarchyView alloc] initWithDataSource:dataSource];
+    hierarchyView.delegate = self;
+    if (self = [self initWithContainerView:hierarchyView]) {
         _dataSource = dataSource;
-        
-        @weakify(self);
-        [RACObserve(dataSource, selectedItem) subscribeNext:^(LookinDisplayItem * _Nullable item) {
-            @strongify(self);
-            [self.hierarchyView scrollToMakeItemVisible:item];
-        }];
-        
-        RAC(self.hierarchyView, displayItems) = [RACObserve(self.dataSource, displayingFlatItems) doNext:^(id  _Nullable x) {
-            @strongify(self);
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [self.hierarchyView updateGuidesWithHoveredItem:self.dataSource.hoveredItem];
-            });
-        }];
-        
-        [[RACObserve(self.dataSource, hoveredItem) distinctUntilChanged] subscribeNext:^(LookinDisplayItem * _Nullable x) {
-            [self.hierarchyView updateGuidesWithHoveredItem:x];
-        }];
+        _hierarchyView = hierarchyView;
     }
     return self;
 }
@@ -86,6 +73,19 @@
     return [self.hierarchyView.tableView.tableView rowViewAtRow:row makeIfNecessary:NO];
 }
 
+- (BOOL)acceptsFirstResponder {
+    return true;
+}
+
+
+- (void)keyDown:(NSEvent *)event {
+    if ([self.dataSource keyDown:event]) {
+        return;
+    }
+
+    [super keyDown:event];
+}
+
 #pragma mark - <LKHierarchyViewDelegate>
 
 - (void)hierarchyView:(LKHierarchyView *)view didSelectItem:(LookinDisplayItem *)item {
@@ -93,13 +93,27 @@
 }
 
 - (void)hierarchyView:(LKHierarchyView *)view didDoubleClickItem:(LookinDisplayItem *)item {
-    if (!item.isExpandable) {
+    BOOL hasShowedAsk = [LKPreferenceManager popupToAskDoubleClickBehaviorIfNeededWithWindow:self.view.window];
+    if (hasShowedAsk) {
         return;
     }
-    if (item.isExpanded) {
-        [self.dataSource collapseItem:item];
+
+    LookinDoubleClickBehavior behavior = [[LKPreferenceManager mainManager] doubleClickBehavior];
+    if (behavior == LookinDoubleClickBehaviorCollapse) {
+        if (!item.isExpandable) {
+            return;
+        }
+        if (item.isExpanded) {
+            [self.dataSource collapseItem:item];
+        } else {
+            [self.dataSource expandItem:item];
+        }
+
+    } else if (behavior == LookinDoubleClickBehaviorFocus) {
+        [self.dataSource focusDisplayItem:item];
+        
     } else {
-        [self.dataSource expandItem:item];
+        NSAssert(NO, @"");
     }
 }
 

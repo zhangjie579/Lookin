@@ -9,10 +9,10 @@
 #import <Foundation/Foundation.h>
 #import "LookinAttributesGroup.h"
 #import "LKExportManager.h"
+#import "LookinMsgAttribute.h"
 
 extern NSString *const LKWindowSizeName_Dynamic;
 extern NSString *const LKWindowSizeName_Static;
-extern NSString *const LKWindowSizeName_Methods;
 
 /// 初始的 preview scale
 extern const CGFloat LKInitialPreviewScale;
@@ -21,6 +21,12 @@ typedef NS_ENUM(NSInteger, LookinPreferredAppeanranceType) {
     LookinPreferredAppeanranceTypeDark,
     LookinPreferredAppeanranceTypeLight,
     LookinPreferredAppeanranceTypeSystem
+};
+
+
+typedef NS_ENUM(NSInteger, LookinDoubleClickBehavior) {
+    LookinDoubleClickBehaviorCollapse,
+    LookinDoubleClickBehaviorFocus
 };
 
 typedef NS_ENUM(NSInteger, LookinPreferredCallStackType) {
@@ -38,6 +44,8 @@ typedef NS_ENUM(NSInteger, LookinPreferredCallStackType) {
 
 /// 仅在 macOS 10.14 及以后上生效
 @property(nonatomic, assign) LookinPreferredAppeanranceType appearanceType;
+
+@property(nonatomic, assign) LookinDoubleClickBehavior doubleClickBehavior;
 
 /// 有效值为 0 ～ 4
 @property(nonatomic, assign) NSInteger expansionIndex;
@@ -89,5 +97,12 @@ extern NSString *const NotificationName_DidChangeSectionShowing;
 
 /// 是否用户正在按住 cmd 键而处于快速选择模式
 @property(nonatomic, strong, readonly) LookinBOOLMsgAttribute *isQuickSelecting;
+
+/// 如果之前没弹过“双击图层时你希望发生什么？”这个框，则这个方法会弹框且返回 YES。否则该方法什么都不会做且返回 NO
++ (BOOL)popupToAskDoubleClickBehaviorIfNeededWithWindow:(NSWindow *)window;
+
+- (void)reset;
+
+- (void)reportStatistics;
 
 @end

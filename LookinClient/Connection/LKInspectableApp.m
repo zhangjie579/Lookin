@@ -10,16 +10,21 @@
 #import "LKConnectionManager.h"
 #import "LookinConnectionResponseAttachment.h"
 #import "LKNavigationManager.h"
-#import "LKMethodTraceDataSource.h"
 
 @implementation LKInspectableApp
 
 - (RACSignal *)fetchHierarchyData {
-    return [self _requestWithType:LookinRequestTypeHierarchy data:nil];
+    /// Lookin 1.0.4 开始加入这个参数
+    NSDictionary *param = @{@"clientVersion": [LKHelper lookinReadableVersion]};
+    return [self _requestWithType:LookinRequestTypeHierarchy data:param];
 }
 
-- (RACSignal *)submitModification:(LookinAttributeModification *)modification {
-    return [self _requestWithType:LookinRequestTypeModification data:modification];
+- (RACSignal *)submitInbuiltModification:(LookinAttributeModification *)modification {
+    return [self _requestWithType:LookinRequestTypeInbuiltAttrModification data:modification];
+}
+
+- (RACSignal *)submitCustomModification:(LookinCustomAttrModification *)modification {
+    return [self _requestWithType:LookinRequestTypeCustomAttrModification data:modification];
 }
 
 - (RACSignal *)fetchHierarchyDetailWithTaskPackages:(NSArray<LookinStaticAsyncUpdateTasksPackage *> *)packages {
@@ -46,27 +51,8 @@
     return [self _requestWithType:LookinRequestTypeFetchObject data:@(oid)];
 }
 
-- (RACSignal *)fetchClassesAndMethodTraceList {
-    return [self _requestWithType:LookinRequestTypeClassesAndMethodTraceLit data:nil];
-}
-
 - (RACSignal *)fetchSelectorNamesWithClass:(NSString *)className hasArg:(BOOL)hasArg {
     return [self _requestWithType:LookinRequestTypeAllSelectorNames data:@{@"className":className, @"hasArg":@(hasArg)}];
-}
-
-- (RACSignal *)addMethodTraceWithClassName:(NSString *)className selName:(NSString *)selName {
-    if (!className || !selName) {
-        return [RACSignal error:LookinErr_Inner];
-    }
-    return [self _requestWithType:LookinRequestTypeAddMethodTrace data:@{@"className": className, @"selName":selName}];
-}
-
-- (RACSignal *)deleteMethodTraceWithClassName:(NSString *)className selName:(NSString *)selName {
-    if (!className) {
-        return [RACSignal error:LookinErr_Inner];
-    }
-    NSDictionary *param = selName ? @{@"className": className, @"selName":selName} : @{@"className": className};
-    return [self _requestWithType:LookinRequestTypeDeleteMethodTrace data:param];
 }
 
 - (RACSignal *)invokeMethodWithOid:(unsigned long)oid text:(NSString *)text {
@@ -131,9 +117,6 @@
 
 #pragma mark - Push From iOS
 
-- (void)handleMethodTraceRecord:(LookinMethodTraceRecord *)record {
-    [[LKNavigationManager sharedInstance].activeMethodTraceDataSource handleReceivingRecord:record];
-}
 
 #pragma mark - Private
 

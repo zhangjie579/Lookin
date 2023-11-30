@@ -19,6 +19,7 @@ extern NSToolbarItemIdentifier const LKToolBarIdentifier_Console;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Add;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Remove;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Measure;
+extern NSToolbarItemIdentifier const LKToolBarIdentifier_Message;
 
 /// 隐藏view, 调整可视化view视图
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_AdjustVisableOfViews;
@@ -32,7 +33,7 @@ extern NSToolbarItemIdentifier const LKToolBarIdentifier_focusOnSelectedView;
 + (instancetype)sharedInstance;
 
 /**
- 通过一下 identifier 创建的 toolBarItem 需要业务自己设置点击 action:
+ 通过以下 identifier 创建的 toolBarItem 需要业务自己设置点击 action:
  - Reload
  - App
  - Expansion

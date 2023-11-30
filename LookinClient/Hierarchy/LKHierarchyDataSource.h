@@ -13,7 +13,17 @@
 /// 数据源刷新的通知
 extern NSString * const LKHierarchyDataSourceReloadHierarchyNotification;
 
+typedef NS_ENUM(NSUInteger, LKHierarchyDataSourceState) {
+    LKHierarchyDataSourceStateNormal,
+    LKHierarchyDataSourceStateSearch,
+    LKHierarchyDataSourceStateFocus,
+};
+
+
 @interface LKHierarchyDataSource : NSObject
+
+/// 业务可以 observe 该属性
+@property(nonatomic, assign, readonly) LKHierarchyDataSourceState state;
 
 /**
  如果 keepState 为 YES，则会尽量维持刷新之前的折叠状态和选中态
@@ -25,6 +35,7 @@ extern NSString * const LKHierarchyDataSourceReloadHierarchyNotification;
 @property(nonatomic, copy, readonly) NSArray<LookinDisplayItem *> *flatItems;
 
 /// 一维数组，只包括在 hierarchy 树中因为未被折叠而可见的 displayItems
+/// 业务可以 observe 该属性
 @property(nonatomic, copy, readonly) NSArray<LookinDisplayItem *> *displayingFlatItems;
 
 /**
@@ -55,6 +66,8 @@ extern NSString * const LKHierarchyDataSourceReloadHierarchyNotification;
 @property(nonatomic, strong, readonly) NSMenu *selectColorMenu;
 /// 该 tag 标示这个 menuItem 是“自定义……”那个选项
 @property(nonatomic, assign, readonly) NSInteger customColorMenuItemTag;
+/// The menu tag of "switch color format"
+@property(nonatomic, assign, readonly) NSInteger toggleColorFormatMenuItemTag;
 
 /// 将 item 折叠起来，如果该 item 没有 subitems 或已经被折叠，则该方法不起任何作用
 - (void)collapseItem:(LookinDisplayItem *)item;
@@ -87,19 +100,23 @@ extern NSString * const LKHierarchyDataSourceReloadHierarchyNotification;
 /// 当该属性为 YES 时，表示正处于 dashboard 搜索状态中，此时 preview 界面不应该响应图层点击
 @property(nonatomic, assign) BOOL shouldAvoidChangingPreviewSelectionDueToDashboardSearch;
 
-#pragma mark - Search
+@property(nonatomic, assign, readonly) BOOL serverSideIsSwiftProject;
 
-/// 当前是否处于搜索状态
-@property(nonatomic, assign, readonly) BOOL isSearching;
+#pragma mark - Search or Focus
 
 /// 应该在用户输入搜索词时调用该方法，内部会直接更改 flatItems 和 displayingFlatItems 对象
 /// string 不能为 nil 或空字符串
 - (void)searchWithString:(NSString *)string;
 
+
 /// 应该在点击搜索框的关闭按钮时调用该方法，用来恢复搜索前的状态等一系列工作
 - (void)endSearch;
 
-/// 由于搜索而修改了 flatItems
-@property(nonatomic, strong, readonly) RACSubject *didReloadFlatItemsWithSearch;
+/// 由于搜索或 Focus 而修改了 flatItems
+@property(nonatomic, strong, readonly) RACSubject *didReloadFlatItemsWithSearchOrFocus;
+
+/// 聚焦
+- (void)focusDisplayItem:(LookinDisplayItem *)item;
+- (void)endFocus;
 
 @end

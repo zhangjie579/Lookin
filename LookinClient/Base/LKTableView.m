@@ -9,6 +9,17 @@
 #import "LKTableView.h"
 #import "LKTableRowView.h"
 
+
+@interface DisableKeyDownTableView: NSTableView
+@property(nonatomic, weak) NSResponder *responder;
+@end
+
+@implementation DisableKeyDownTableView
+- (void)keyDown:(NSEvent *)event {
+    [self.responder keyDown:event];
+}
+@end
+
 @interface LKTableView () <NSTableViewDelegate, NSTableViewDataSource>
 
 @property(nonatomic, assign) CGFloat tableViewWidth;
@@ -34,7 +45,9 @@
         self.hasVerticalScroller = YES;
         self.autohidesScrollers = YES;
         
-        _tableView = [[NSTableView alloc] init];
+        DisableKeyDownTableView *tableView = [[DisableKeyDownTableView alloc] init];
+        tableView.responder = self;
+        _tableView = tableView;
         if (@available(macOS 11.0, *)) {
             self.tableView.style = NSTableViewStylePlain;
         }
@@ -94,6 +107,14 @@
 - (void)reloadData {
     self.selectedRow = -1;
     [self.tableView reloadData];
+}
+
+- (void)reloadDataWithOffset {
+    CGPoint offset = self.documentVisibleRect.origin;
+    [self reloadData];
+    self.needsLayout = YES;
+    [self layoutSubtreeIfNeeded];
+    [self.documentView scrollPoint:offset];
 }
 
 - (void)scrollRowToVisible:(NSInteger)row {

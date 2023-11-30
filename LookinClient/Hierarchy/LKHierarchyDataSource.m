@@ -12,6 +12,7 @@
 #import "LKPreferenceManager.h"
 #import "LKColorIndicatorLayer.h"
 #import "LKUserActionManager.h"
+#import "LookinDisplayItem+LookinClient.h"
 @import AppCenter;
 @import AppCenterAnalytics;
 
@@ -57,30 +58,32 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
 @interface LookinDisplayItem (LKHierarchyDataSource)
 
 /// 记录搜索之前的 isExpanded 的值，用来在结束搜索后恢复
-@property(nonatomic, assign) BOOL isExpandedBeforeSearching;
+@property(nonatomic, assign) BOOL isExpandedBeforeSearchOrFocus;
 
 @end
 
 @implementation LookinDisplayItem (LKHierarchyDataSource)
 
-- (void)setIsExpandedBeforeSearching:(BOOL)isExpandedBeforeSearching {
+- (void)setIsExpandedBeforeSearchOrFocus:(BOOL)isExpandedBeforeSearching {
     [self lookin_bindBOOL:isExpandedBeforeSearching forKey:@"isExpandedBeforeSearching"];
 }
 
-- (BOOL)isExpandedBeforeSearching {
+- (BOOL)isExpandedBeforeSearchOrFocus {
     return [self lookin_getBindBOOLForKey:@"isExpandedBeforeSearching"];
 }
 
 @end
 
 @interface LKHierarchyDataSource ()
+@property(nonatomic, assign) LKHierarchyDataSourceState state;
 
 @property(nonatomic, strong, readwrite) LookinHierarchyInfo *rawHierarchyInfo;
 
-/// 非搜索状态下，rawFlatItems 和 flatItems 一致。搜索状态下，flatItems 仅包含搜索结果，而 rawFlatItems 则仍保持为非搜索状态下的值，可用来在结束搜索时恢复
+/// 每次刷新 Lookin 后，全新生成的 display items 会被保存在这个属性中，并且不会再被修改（除非下次 reload）
 @property(nonatomic, copy) NSArray<LookinDisplayItem *> *rawFlatItems;
+/// 搜索或聚焦状态下，flatItems 是 rawFlatItems 的子集（normal 状态下，flatItems 和 rawFlatItems 等价）
 @property(nonatomic, copy, readwrite) NSArray<LookinDisplayItem *> *flatItems;
-
+/// displayingFlatItems 是 flatItems 的子集，仅包含用户可以看到的 items，而那些被折叠的 items 会被剔除。换句话说，当用户展开或收起 item 时，displayingFlatItems 属性会被 buildDisplayingFlatItems 方法不断更新
 @property(nonatomic, copy, readwrite) NSArray<LookinDisplayItem *> *displayingFlatItems;
 
 @property(nonatomic, strong, readwrite) NSMenu *selectColorMenu;
@@ -97,8 +100,6 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
  */
 @property(nonatomic, strong) NSDictionary<NSString *, NSArray<NSString *> *> *colorToAliasMap;
 
-@property(nonatomic, assign, readwrite) BOOL isSearching;
-
 @end
 
 @implementation LKHierarchyDataSource
@@ -109,7 +110,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         _itemDidChangeAttrGroup = [RACSubject subject];
         _itemDidChangeNoPreview = [RACSubject subject];
         _didReloadHierarchyInfo = [RACSubject subject];
-        _didReloadFlatItemsWithSearch = [RACSubject subject];
+        _didReloadFlatItemsWithSearchOrFocus = [RACSubject subject];
         
         @weakify(self);
         [[[RACObserve([LKPreferenceManager mainManager], rgbaFormat) skip:1] distinctUntilChanged] subscribeNext:^(id  _Nullable x) {
@@ -152,14 +153,15 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
     NSArray<LookinDisplayItem *> *flatItems = self.rawFlatItems.copy;
     
     // 设置 preferToBeCollapsed 属性
-    NSSet<NSString *> *classesPreferredToCollapse = [NSSet setWithObjects:@"UILabel", @"UIPickerView", @"UIProgressView", @"UIActivityIndicatorView", @"UIAlertView", @"UIActionSheet", @"UISearchBar", @"UIButton", @"UITextView", @"UIDatePicker", @"UIPageControl", @"UISegmentedControl", @"UITextField", @"UISlider", @"UISwitch", @"UIVisualEffectView", @"UIImageView", @"WKCommonWebView", @"UITextEffectsWindow", @"LKS_LocalInspectContainerWindow", nil];
+    NSSet<NSString *> *classesPreferredToCollapse = [NSSet setWithObjects:@"UILabel", @"UIPickerView", @"UIProgressView", @"UIActivityIndicatorView", @"UIAlertView", @"UIActionSheet", @"UISearchBar", @"UIButton", @"UITextView", @"UIDatePicker", @"UIPageControl", @"UISegmentedControl", @"UITextField", @"UISlider", @"UISwitch", @"UIVisualEffectView", @"UIImageView", @"WKCommonWebView", @"UITextEffectsWindow", nil];
     if (info.collapsedClassList.count) {
         classesPreferredToCollapse = [classesPreferredToCollapse setByAddingObjectsFromArray:info.collapsedClassList];
     }
     // no preview
-    NSSet<NSString *> *classesWithNoPreview = [NSSet setWithArray:@[@"UITextEffectsWindow", @"UIRemoteKeyboardWindow", @"LKS_LocalInspectContainerWindow"]];
+    NSSet<NSString *> *classesWithNoPreview = [NSSet setWithArray:@[@"UITextEffectsWindow", @"UIRemoteKeyboardWindow"]];
     
-    __block BOOL isSwiftProject = NO;
+    __block BOOL hasCustomSubviews = NO;
+    __block BOOL hasCustomAttrs = NO;
     [flatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if ([obj itemIsKindOfClassesWithNames:classesPreferredToCollapse]) {
             [obj enumerateSelfAndChildren:^(LookinDisplayItem *item) {
@@ -173,19 +175,34 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
             }
         }
         
-        if (!obj.shouldCaptureImage) {
+        if (!obj.isUserCustom && !obj.shouldCaptureImage) {
             [obj enumerateSelfAndChildren:^(LookinDisplayItem *item) {
                 item.noPreview = YES;
                 item.doNotFetchScreenshotReason = LookinDoNotFetchScreenshotForUserConfig;
             }];
         }
+//        } else if ([LKPreferenceManager mainManager].showHiddenItems.currentBOOLValue == NO && obj.inHiddenHierarchy) {
+//            [obj enumerateSelfAndChildren:^(LookinDisplayItem *item) {
+//                item.noPreview = YES;
+//                item.doNotFetchScreenshotReason = LookinDoNotFetchScreenshotForHidden;
+//            }];
+//        }
         
-        if (!isSwiftProject) {
+        if (!self.serverSideIsSwiftProject) {
             if ([obj.displayingObject.completedSelfClassName containsString:@"."]) {
-                isSwiftProject = YES;
+                _serverSideIsSwiftProject = YES;
             }
         }
+        
+        if (obj.isUserCustom) {
+            hasCustomSubviews = YES;
+        }
+        if (obj.customAttrGroupList.count > 0) {
+            hasCustomAttrs = YES;
+        }
     }];
+    [MSACAnalytics trackEvent:@"CustomSubview" withProperties:@{@"Has": hasCustomSubviews ? @"True" : @"False"}];
+    [MSACAnalytics trackEvent:@"CustomAttrs" withProperties:@{@"Has": hasCustomAttrs ? @"True" : @"False"}];
     
     self.flatItems = flatItems;
     
@@ -218,6 +235,11 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
     }
     self.selectedItem = shouldSelectedItem;
 
+    if (self.state != LKHierarchyDataSourceStateNormal) {
+        // 可能在 search 或 focus 状态，要退出
+        self.state = LKHierarchyDataSourceStateNormal;
+    }
+    
     [self.didReloadHierarchyInfo sendNext:nil];
 }
 
@@ -244,9 +266,11 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
     if (_selectedItem == selectedItem) {
         return;
     }
-    _selectedItem.isSelected = NO;
+    LookinDisplayItem *prevItem = _selectedItem;
     _selectedItem = selectedItem;
-    _selectedItem.isSelected = YES;
+    
+    [prevItem notifySelectionChangeToDelegates];
+    [_selectedItem notifySelectionChangeToDelegates];
 
     [[LKUserActionManager sharedInstance] sendAction:LKUserActionType_SelectedItemChange];
     
@@ -264,9 +288,10 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
     if (_hoveredItem == hoveredItem) {
         return;
     }
-    _hoveredItem.isHovered = NO;
+    LookinDisplayItem *prevItem = _hoveredItem;
     _hoveredItem = hoveredItem;
-    _hoveredItem.isHovered = YES;
+    [prevItem notifyHoverChangeToDelegates];
+    [_hoveredItem notifyHoverChangeToDelegates];
 }
 
 - (void)adjustExpansionByIndex:(NSInteger)index referenceDict:(NSDictionary<NSNumber *, NSNumber *> *)referenceDict selectedItem:(LookinDisplayItem **)selectedItem {
@@ -485,7 +510,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         }
     }
     
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
 }
 
 - (LookinDisplayItem *)displayItemWithOid:(unsigned long)oid {
@@ -508,7 +533,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
     self.oidToDisplayItemMap = map;
 }
 
-- (void)_updateDisplayingFlatItems {
+- (void)buildDisplayingFlatItems {
     NSMutableArray<LookinDisplayItem *> *displayingItems = [NSMutableArray array];
     [self.flatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if (obj.displayingInHierarchy) {
@@ -526,7 +551,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         return;
     }
     item.isExpanded = NO;
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
 }
 
 - (void)expandItem:(LookinDisplayItem *)item {
@@ -537,7 +562,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         return;
     }
     item.isExpanded = YES;
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
 }
 
 - (void)expandToShowItem:(LookinDisplayItem *)item {
@@ -547,7 +572,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         }
     }];
     
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
 }
 
 - (void)expandItemsRootedByItem:(LookinDisplayItem *)item {
@@ -565,7 +590,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         }];
     }
     
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
 }
 
 - (void)collapseAllChildrenOfItem:(LookinDisplayItem *)item {
@@ -581,7 +606,7 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         }
         enumeratedItem.isExpanded = NO;
     }];
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
 }
 
 #pragma mark - Search
@@ -592,11 +617,11 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         return;
     }
     
-    if (!self.isSearching) {
+    if (self.state != LKHierarchyDataSourceStateSearch) {
         [self.rawFlatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            obj.isExpandedBeforeSearching = obj.isExpanded;
+            obj.isExpandedBeforeSearchOrFocus = obj.isExpanded;
         }];
-        self.isSearching = YES;
+        self.state = LKHierarchyDataSourceStateSearch;
     }
     
     self.selectedItem = nil;
@@ -667,20 +692,67 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         return shouldShow;
     }];
     self.flatItems = flatItems;
-    [self.didReloadFlatItemsWithSearch sendNext:nil];
+    [self.didReloadFlatItemsWithSearchOrFocus sendNext:nil];
     
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
+}
+
+// 有可能从 normal 状态或 search 状态进入该状态
+- (void)focusDisplayItem:(LookinDisplayItem *)item {
+    [MSACAnalytics trackEvent:@"Focus"];
+
+    if (!item) {
+        NSAssert(NO, @"");
+        return;
+    }
+    self.selectedItem = item;
+
+    if (self.state == LKHierarchyDataSourceStateNormal) {
+        [self.rawFlatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            obj.isExpandedBeforeSearchOrFocus = obj.isExpanded;
+        }];
+    } else if (self.state == LKHierarchyDataSourceStateSearch) {
+        [self.rawFlatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            obj.isInSearch = NO;
+            obj.highlightedSearchString = nil;
+        }];
+    }
+    self.state = LKHierarchyDataSourceStateFocus;
+
+    NSMutableArray *newFlatItems = [NSMutableArray array];
+    [item enumerateSelfAndChildren:^(LookinDisplayItem *currItem) {
+        [newFlatItems addObject:currItem];
+    }];
+    self.flatItems = newFlatItems;
+    [self.didReloadFlatItemsWithSearchOrFocus sendNext:nil];
+    [self buildDisplayingFlatItems];
+}
+
+- (void)endFocus {
+    if (self.state == LKHierarchyDataSourceStateNormal) {
+        return;
+    }
+    self.state = LKHierarchyDataSourceStateNormal;
+    
+    [self.rawFlatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        obj.isExpanded = obj.isExpandedBeforeSearchOrFocus;
+    }];
+    
+    self.flatItems = self.rawFlatItems;
+    [self.didReloadFlatItemsWithSearchOrFocus sendNext:nil];
+    [self buildDisplayingFlatItems];
 }
 
 - (void)endSearch {
-    if (!self.isSearching) {
+    if (self.state == LKHierarchyDataSourceStateNormal) {
         return;
     }
-    self.isSearching = NO;
+    self.state = LKHierarchyDataSourceStateNormal;
     
     [self.rawFlatItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         obj.isInSearch = NO;
-        obj.isExpanded = obj.isExpandedBeforeSearching;
+        obj.highlightedSearchString = nil;
+        obj.isExpanded = obj.isExpandedBeforeSearchOrFocus;
     }];
     /// 搜索时被选中的 item，在结束搜索后也应该处于被选中且可见的状态
     [self.selectedItem enumerateAncestors:^(LookinDisplayItem *item, BOOL *stop) {
@@ -688,9 +760,9 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
     }];
     
     self.flatItems = self.rawFlatItems;
-    [self.didReloadFlatItemsWithSearch sendNext:nil];
+    [self.didReloadFlatItemsWithSearchOrFocus sendNext:nil];
     
-    [self _updateDisplayingFlatItems];
+    [self buildDisplayingFlatItems];
 }
 
 #pragma mark - Colors
@@ -848,6 +920,18 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         menuItem.tag = self.customColorMenuItemTag;
         menuItem;
     })];
+    [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItem:({
+        NSMenuItem *menuItem = [NSMenuItem new];
+        menuItem.image = [[NSImage alloc] initWithSize:NSMakeSize(1, 22)];
+        if (rgbaFormat) {
+            menuItem.title = NSLocalizedString(@"Switch color format to HEX", nil);
+        } else {
+            menuItem.title = NSLocalizedString(@"Switch color format to RGBA", nil);
+        }
+        menuItem.tag = self.toggleColorFormatMenuItemTag;
+        menuItem;
+    })];
     
     return menu;
 }
@@ -863,6 +947,10 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
 
 - (NSInteger)customColorMenuItemTag {
     return 10;
+}
+
+- (NSInteger)toggleColorFormatMenuItemTag {
+    return 11;
 }
 
 #pragma mark - Others

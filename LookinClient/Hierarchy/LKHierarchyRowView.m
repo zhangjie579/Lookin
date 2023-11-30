@@ -14,6 +14,8 @@
 #import "LKNavigationManager.h"
 #import "LKStaticWindowController.h"
 #import "LKTutorialManager.h"
+#import "LKHierarchyDataSource.h"
+#import "LookinDisplayItem+LookinClient.h"
 
 @interface LKHierarchyRowView () <LookinDisplayItemDelegate>
 
@@ -22,10 +24,18 @@
 @property(nonatomic, strong) CALayer *eventHandlerButtonColorLayer;
 @property(nonatomic, assign) BOOL isFocusingHandlerButton;
 
+@property(nonatomic, strong) LKHierarchyDataSource *dataSource;
+
 @end
 
 @implementation LKHierarchyRowView
 
+- (instancetype)initWithDataSource:(LKHierarchyDataSource *)dataSource {
+    if (self = [super initWithFrame:CGRectZero]) {
+        self.dataSource = dataSource;
+    }
+    return self;
+}
 - (void)layout {
     [super layout];
     
@@ -39,52 +49,28 @@
 }
 
 - (void)setDisplayItem:(LookinDisplayItem *)displayItem {
-    if (_displayItem == displayItem) {
-        return;
-    }
     _displayItem = displayItem;
     
     displayItem.rowViewDelegate = self;
-    
-    // event handler
-    if (displayItem.eventHandlers.count) {
-        if (!self.eventHandlerButton) {
-            _eventHandlerButton = [NSButton new];
-            [self.eventHandlerButton setTitle:@""];
-            self.eventHandlerButton.target = self;
-            self.eventHandlerButton.action = @selector(_handleClickEventHandlerButton:);
-            self.eventHandlerButton.wantsLayer = YES;
-            self.eventHandlerButton.bordered = NO;
-            [self.eventHandlerButton setBezelStyle:NSBezelStyleRoundRect];
-            self.eventHandlerButton.layer.backgroundColor = [NSColor clearColor].CGColor;
-            [self addSubview:self.eventHandlerButton];
-        
-            self.eventHandlerButtonColorLayer = [CALayer layer];
-            self.eventHandlerButtonColorLayer.actions = @{NSStringFromSelector(@selector(contents)): [NSNull null]};
-            [self.eventHandlerButton.layer addSublayer:self.eventHandlerButtonColorLayer];
-        }
-        self.eventHandlerButton.hidden = NO;
-        [self _updateEventHandlerButtonColors];
-    } else {
-        self.eventHandlerButton.hidden = YES;
-    }
-    
-    self.image = [self _iconWithDisplayItem:displayItem isSelected:displayItem.isSelected];
-    self.indentLevel = displayItem.indentLevel;
-    [self updateContentWidth];
-    [self _updateLabelStringsAndImageViewAlpha];
-    [self _updateLabelsFonts];
-
-    [self setNeedsLayout:YES];
+    [self reRender];
 }
 
-- (void)setIsSelected:(BOOL)isSelected {
-    [super setIsSelected:isSelected];
-    self.imageView.image = [self _iconWithDisplayItem:self.displayItem isSelected:isSelected];
-    [self _updateEventHandlerButtonColors];
-    [self _updateStrikethroughLayerColor];
+- (void)reRender {
+    if (!self.displayItem) {
+        return;
+    }
+    self.isSelected = (self.dataSource.selectedItem == self.displayItem);
+    self.isHovered = (self.dataSource.hoveredItem == self.displayItem);
+    self.image = [self resolveIconImage];
+    self.indentLevel = self.displayItem.indentLevel - self.minIndentLevel;
+    [self updateEventsButton];
+    [self updateExpandStatus];
+    [self updateContentWidth];
+    [self updateStrikethroughLayer];
     [self _updateLabelStringsAndImageViewAlpha];
-    [self _updateLabelStringsAndImageViewAlpha];
+    [self _updateLabelsFonts];
+    
+    [self setNeedsLayout:YES];
 }
 
 - (void)setIsHovered:(BOOL)isHovered {
@@ -150,14 +136,10 @@
         titleColor = [NSColor whiteColor];
         subtitleColor = [NSColor whiteColor];
         self.imageView.alphaValue = 1;
-        
-    } else if (self.displayItem.inHiddenHierarchy ||
-               self.displayItem.inNoPreviewHierarchy ||
-               (self.displayItem.isInSearch && !self.displayItem.highlightedSearchString.length)) {
+    } else if ([self resolveIfShouldFadeContent]) {
         titleColor = [NSColor tertiaryLabelColor];
         subtitleColor = [NSColor tertiaryLabelColor];
         self.imageView.alphaValue = .6;
-        
     } else {
         titleColor = [NSColor labelColor];
         subtitleColor = [NSColor secondaryLabelColor];
@@ -191,71 +173,78 @@
     self.subtitleLabel.attributedStringValue = subtitleString;
 }
 
+- (void)updateEventsButton {
+    if (!self.displayItem || self.displayItem.eventHandlers.count == 0) {
+        self.eventHandlerButton.hidden = YES;
+        return;
+    }
+    if (!self.eventHandlerButton) {
+        _eventHandlerButton = [NSButton new];
+        [self.eventHandlerButton setTitle:@""];
+        self.eventHandlerButton.target = self;
+        self.eventHandlerButton.action = @selector(_handleClickEventHandlerButton:);
+        self.eventHandlerButton.wantsLayer = YES;
+        self.eventHandlerButton.bordered = NO;
+        [self.eventHandlerButton setBezelStyle:NSBezelStyleRoundRect];
+        self.eventHandlerButton.layer.backgroundColor = [NSColor clearColor].CGColor;
+        [self addSubview:self.eventHandlerButton];
+    
+        self.eventHandlerButtonColorLayer = [CALayer layer];
+        self.eventHandlerButtonColorLayer.actions = @{NSStringFromSelector(@selector(contents)): [NSNull null]};
+        [self.eventHandlerButton.layer addSublayer:self.eventHandlerButtonColorLayer];
+    }
+    self.eventHandlerButton.hidden = NO;
+    [self _updateEventHandlerButtonColors];
+}
+
 #pragma mark - <LookinDisplayItemDelegate>
 
 - (void)displayItem:(LookinDisplayItem *)displayItem propertyDidChange:(LookinDisplayItemProperty)property {
-    if (property == LookinDisplayItemProperty_None || property == LookinDisplayItemProperty_IsSelected) {
-        self.isSelected = displayItem.isSelected;
-    }
-    
-    if (property == LookinDisplayItemProperty_None || property == LookinDisplayItemProperty_IsHovered) {
-        self.isHovered = displayItem.isHovered;
-    }
-
-    if (property == LookinDisplayItemProperty_None ||
-        property == LookinDisplayItemProperty_IsExpandable ||
-        property == LookinDisplayItemProperty_IsExpanded) {
-        if (!displayItem.isExpandable) {
-            self.status = LKOutlineRowViewStatusNotExpandable;
-        } else if (displayItem.isExpanded) {
-            self.status = LKOutlineRowViewStatusExpanded;
-        } else {
-            self.status = LKOutlineRowViewStatusCollapsed;
-        }
-    }
-    
-    if (property == LookinDisplayItemProperty_None || property == LookinDisplayItemProperty_InNoPreviewHierarchy) {
-        if (displayItem.inNoPreviewHierarchy) {
-            if (!self.strikethroughLayer) {
-                self.strikethroughLayer = [CALayer layer];
-                [self.strikethroughLayer lookin_removeImplicitAnimations];
-                [self _updateStrikethroughLayerColor];
-                [self.layer addSublayer:self.strikethroughLayer];
-            }
-            self.strikethroughLayer.hidden = NO;
-            [self setNeedsLayout:YES];
-        } else {
-            self.strikethroughLayer.hidden = YES;
-        }
-    }
-    
-    if (property == LookinDisplayItemProperty_InHiddenHierarchy ||
-        property == LookinDisplayItemProperty_InNoPreviewHierarchy) {
-        [self _updateLabelStringsAndImageViewAlpha];
-        [self _updateLabelsFonts];
-    }
-    
-    if (property == LookinDisplayItemProperty_None ||
-        property == LookinDisplayItemProperty_IsInSearch ||
-        property == LookinDisplayItemProperty_HighlightedSearchString) {
-        [self _updateLabelStringsAndImageViewAlpha];
+    if (property == LookinDisplayItemProperty_IsHovered) {
+        self.isHovered = (self.dataSource.hoveredItem == self.displayItem);
+    } else {
+        [self reRender];
     }
 }
 
-- (void)_updateStrikethroughLayerColor {
-    if (!self.strikethroughLayer) {
-        return;
-    }
-    if (self.isSelected) {
-        self.strikethroughLayer.backgroundColor = [[NSColor whiteColor] colorWithAlphaComponent:.75].CGColor;
+- (void)updateStrikethroughLayer {
+    BOOL shouldShow = [self resolveIfShouldShowStrikethrough];
+    if (shouldShow) {
+        if (!self.strikethroughLayer) {
+            self.strikethroughLayer = [CALayer layer];
+            [self.strikethroughLayer lookin_removeImplicitAnimations];
+            [self.layer addSublayer:self.strikethroughLayer];
+        }
+        if (self.isSelected) {
+            self.strikethroughLayer.backgroundColor = [[NSColor whiteColor] colorWithAlphaComponent:.75].CGColor;
+        } else {
+            self.strikethroughLayer.backgroundColor = self.isDarkMode ? LookinColorRGBAMake(255, 255, 255, .2).CGColor : LookinColorRGBAMake(0, 0, 0, .2).CGColor;
+        }
+        self.strikethroughLayer.hidden = NO;
+        [self setNeedsLayout:YES];
+        
     } else {
-        self.strikethroughLayer.backgroundColor = self.isDarkMode ? LookinColorRGBAMake(255, 255, 255, .2).CGColor : LookinColorRGBAMake(0, 0, 0, .2).CGColor;
+        self.strikethroughLayer.hidden = YES;
     }
+}
+
+- (BOOL)resolveIfShouldShowStrikethrough {
+    LookinDisplayItem *item = self.displayItem;
+    if (!item) {
+        return NO;
+    }
+    if (![item hasPreviewBoxAbility]) {
+        return NO;
+    }
+    if (item.inNoPreviewHierarchy) {
+        return YES;
+    }
+    return NO;
 }
 
 - (void)setIsDarkMode:(BOOL)isDarkMode {
     [super setIsDarkMode:isDarkMode];
-    [self _updateStrikethroughLayerColor];
+    [self updateStrikethroughLayer];
 }
 
 - (void)_updateEventHandlerButtonColors {
@@ -279,7 +268,8 @@
 }
 
 - (void)_updateLabelsFonts {
-    if (self.displayItem.inNoPreviewHierarchy || self.displayItem.inHiddenHierarchy) {
+    BOOL noImage = self.displayItem.inNoPreviewHierarchy || self.displayItem.inHiddenHierarchy;
+    if (!self.displayItem.isUserCustom && noImage) {
         self.titleLabel.font = [LKHelper italicFontOfSize:13];
         self.subtitleLabel.font = [LKHelper italicFontOfSize:12];
     } else {
@@ -289,9 +279,23 @@
     [self setNeedsLayout:YES];
 }
 
+- (void)updateExpandStatus {
+    if (!self.displayItem) {
+        self.status = LKOutlineRowViewStatusNotExpandable;
+        return;
+    }
+    if (!self.displayItem.isExpandable) {
+        self.status = LKOutlineRowViewStatusNotExpandable;
+    } else if (self.displayItem.isExpanded) {
+        self.status = LKOutlineRowViewStatusExpanded;
+    } else {
+        self.status = LKOutlineRowViewStatusCollapsed;
+    }
+}
+
 #pragma mark - Others
 
-- (NSImage *)_iconWithDisplayItem:(LookinDisplayItem *)item isSelected:(BOOL)isSelected {
+- (NSImage *)resolveIconImage {
     static dispatch_once_t viewOnceToken;
     static NSArray<NSDictionary<NSString *, NSString *> *> *viewsList = nil;
     dispatch_once(&viewOnceToken,^{
@@ -300,6 +304,7 @@
                       @{@"UINavigationBar": @"hierarchy_navigationbar"},
                       @{@"UITabBar": @"hierarchy_tabbar"},
                       @{@"UITextView": @"hierarchy_textview"},
+                      @{@"UIStackView": @"hierarchy_stackview"},
                       @{@"UITextField": @"hierarchy_textfield"},
                       @{@"UITableView": @"hierarchy_tableview"},
                       @{@"UICollectionView": @"hierarchy_collectionview"},
@@ -322,8 +327,15 @@
                       ];
     });
     
+    LookinDisplayItem *item = self.displayItem;
+    if (!item) {
+        return nil;
+    }
     __block NSString *imageName = nil;
-    if (item.hostViewControllerObject) {
+    if (item.isUserCustom) {
+        imageName = @"hierarchy_custom";
+        
+    } else if (item.hostViewControllerObject) {
         imageName = @"hierarchy_controller";
         
     } else if (item.viewObject) {
@@ -363,7 +375,7 @@
         imageName = @"hierarchy_view";
     }
 
-    if (isSelected) {
+    if (self.dataSource.selectedItem == self.displayItem) {
         NSString *selectedImageName = [imageName stringByAppendingString:@"_selected"];
         NSImage *selectedImage = NSImageMake(selectedImageName);
         if (selectedImage) {
@@ -374,6 +386,18 @@
     } else {
         return NSImageMake(imageName);
     }
+}
+
+- (BOOL)resolveIfShouldFadeContent {
+    LookinDisplayItem *item = self.displayItem;
+    
+    if (item.isInSearch && !item.highlightedSearchString.length) {
+        return YES;
+    }
+    if (![item hasPreviewBoxAbility]) {
+        return NO;
+    }
+    return (item.inHiddenHierarchy || item.inNoPreviewHierarchy);
 }
 
 + (CGFloat)insetLeft {

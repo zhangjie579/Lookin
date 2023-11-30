@@ -12,7 +12,7 @@
 
 @property(nonatomic, strong) LKLabel *titleLabel;
 @property(nonatomic, strong) NSImageView *imageView;
-@property(nonatomic, strong) CALayer *sepLayer;;
+@property(nonatomic, strong) CALayer *sepLayer;
 
 - (NSColor *)buttonTextColor;
 
@@ -156,6 +156,12 @@
     [self _updateButton];
 }
 
+-(void)setInternalInsetsRight:(CGFloat)value {
+    _insetRightWithButton = value;
+    _insetRightWithoutButton = value;
+    _imageRight = value;
+}
+
 - (void)_handleButton {
     if (self.target && self.clickAction) {
         [NSApp sendAction:self.clickAction to:self.target from:self];
@@ -187,6 +193,54 @@
 }
 
 @end
+
+@interface LKYellowTipsView ()
+
+@property(nonatomic, assign) BOOL isAnimating;
+
+@end
+
+@implementation LKYellowTipsView
+
+- (void)startAnimation {
+    if (self.isAnimating) {
+        return;
+    }
+    CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:@"backgroundColor"];
+    if ([self.effectiveAppearance lk_isDarkMode]) {
+        anim.fromValue = (id)[NSColor.systemOrangeColor colorWithAlphaComponent:0.7].CGColor;
+        anim.toValue = (id)[NSColor.systemOrangeColor colorWithAlphaComponent:0.64].CGColor;
+    } else {
+        anim.fromValue = (id)[NSColor.systemOrangeColor colorWithAlphaComponent:0.98].CGColor;
+        anim.toValue = (id)[NSColor.systemOrangeColor colorWithAlphaComponent:0.92].CGColor;
+    }
+    anim.duration = .8;
+    anim.repeatCount = HUGE_VALF;
+    anim.autoreverses = YES;
+    [self.layer removeAllAnimations];
+    [self.layer addAnimation:anim forKey:nil];
+    
+    self.isAnimating = YES;
+}
+
+- (void)endAnimation {
+    [self.layer removeAllAnimations];
+    self.isAnimating = NO;
+}
+
+- (void)updateColors {
+    [super updateColors];
+    self.titleLabel.textColor = [NSColor whiteColor];
+    self.layer.borderColor = [NSColor clearColor].CGColor;
+    self.sepLayer.backgroundColor = LookinColorRGBAMake(255, 255, 255, .5).CGColor;
+}
+
+- (NSColor *)buttonTextColor {
+    return [NSColor whiteColor];
+}
+
+@end
+
 
 @implementation LKRedTipsView
 

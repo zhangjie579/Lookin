@@ -174,6 +174,13 @@
         menuItem.action = @selector(_handleCustomColorMenuItem);
         return;
     }
+    
+    if (menuItem.tag == self.dashboardViewController.currentDataSource.toggleColorFormatMenuItemTag) {
+        menuItem.state = NSControlStateValueOff;
+        menuItem.target = self;
+        menuItem.action = @selector(_handleToggleColorFormatMenuItem);
+        return;
+    }
 
     menuItem.target = self;
     menuItem.action = @selector(_handlePresetMenuItem:);
@@ -202,6 +209,11 @@
     [panel orderFront:self];
 }
 
+- (void)_handleToggleColorFormatMenuItem {
+    BOOL isRGBA = [LKPreferenceManager mainManager].rgbaFormat;
+    [LKPreferenceManager mainManager].rgbaFormat = !isRGBA;
+}
+
 - (void)_handleSystemColorPanel:(NSColorPanel *)panel {
     [self _modifyToColor:panel.color];
 }
@@ -213,7 +225,10 @@
         return;
     }
     // 提交修改
+    @weakify(self);
     [[self.dashboardViewController modifyAttribute:self.attribute newValue:expecetdValue] subscribeNext:^(id  _Nullable x) {
+        @strongify(self);
+        [self renderWithAttribute];
     }];
 }
 

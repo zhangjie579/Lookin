@@ -39,9 +39,10 @@
 #import "NSButton+LookinClient.h"
 #import "NSControl+LookinClient.h"
 #import "NSArray+LookinClient.h"
+#import "LookinDisplayItem+LookinClient.h"
+#import "LookinCustomDisplayItemInfo+LookinClient.h"
 
 #import "ShortCocoa+LookinClient.h"
-#import "LookinMsgAttribute.h"
 
 
 #endif /* PrefixHeader_pch */
