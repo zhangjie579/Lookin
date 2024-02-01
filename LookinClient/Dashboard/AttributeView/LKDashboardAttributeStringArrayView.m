@@ -7,11 +7,13 @@
 //
 
 #import "LKDashboardAttributeStringArrayView.h"
+#import "DanceScriptManager.h"
 
 @interface LKDashboardAttributeStringArrayView ()
 
 @property(nonatomic, copy) NSArray<LKLabel *> *labels;
 @property(nonatomic, copy) NSArray<CALayer *> *sepLayers;
+@property(nonatomic, strong) NSButton *danceButton;
 
 @end
 
@@ -45,6 +47,9 @@
             }
         }
     }];
+    if (self.danceButton.isVisible) {
+        $(self.danceButton).width(150).horAlign.height(25).bottom(0);
+    }
 }
 
 - (NSSize)sizeThatFits:(NSSize)limitedSize {
@@ -56,6 +61,9 @@
         }
         return accumulator;
     } initialAccumlator:0];
+    if (self.danceButton.isVisible) {
+        limitedSize.height += 35;
+    }
     return limitedSize;
 }
 
@@ -68,6 +76,7 @@
     NSArray<NSString *> *lists = [self stringListWithAttribute:self.attribute];
     self.labels = [self.labels lookin_resizeWithCount:lists.count add:^LKLabel *(NSUInteger idx) {
         LKLabel *label = [LKLabel new];
+        label.lineBreakStrategy = NSLineBreakStrategyNone;
         label.selectable = YES;
         label.allowsEditingTextAttributes = YES;
         [self addSubview:label];
@@ -102,6 +111,19 @@
         self.sepLayers = @[];
     }
     
+    [self.danceButton setHidden:YES];
+    if ([self.attribute.identifier isEqualToString:LookinAttr_Class_Class_Class]) {
+        NSString *danceSource = self.attribute.targetDisplayItem.danceuiSource;
+        if (!danceSource) {
+            danceSource = self.attribute.targetDisplayItem.customInfo.danceuiSource;
+        }
+        if (danceSource) {
+            [self addDanceButtonIfNeeded];
+            self.danceButton.title = NSLocalizedString(@"Navigate…", nil);
+            [self.danceButton setHidden:NO];
+        }
+    }
+    
     [self setNeedsLayout:YES];
 }
 
@@ -111,4 +133,22 @@
         obj.backgroundColor = self.isDarkMode ? SeparatorDarkModeColor.CGColor : SeparatorLightModeColor.CGColor;
     }];
 }
+
+- (void)addDanceButtonIfNeeded {
+    if (self.danceButton) {
+        return;
+    }
+    self.danceButton = [NSButton lk_normalButtonWithTitle:@"" target:self action:@selector(handleDanceButton)];
+    self.danceButton.font = NSFontMake(12);
+    [self addSubview:self.danceButton];
+}
+
+- (void)handleDanceButton {
+    NSString *json = self.attribute.targetDisplayItem.danceuiSource;
+    if (!json) {
+        json = self.attribute.targetDisplayItem.customInfo.danceuiSource;
+    }
+    [[DanceScriptManager shared] handleText:json];
+}
+
 @end

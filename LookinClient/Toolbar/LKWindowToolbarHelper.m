@@ -80,8 +80,7 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
         item.view = button;
         item.minSize = NSMakeSize(48, 34);
 
-        [manager.isMeasuring subscribe:self action:@selector(_handleMeasureDidChange:) relatedObject:button sendAtOnce:YES];
-
+        [manager.measureState subscribe:self action:@selector(_handleMeasureStateDidChange:) relatedObject:button sendAtOnce:YES];
         return item;
     }
 
@@ -369,13 +368,14 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
 
 - (void)_handleToggleMeasureButton:(NSButton *)button {
     LKPreferenceManager *manager = [button lookin_getBindObjectForKey:@"manager"];
-    [manager.isMeasuring setBOOLValue:((button.state == NSControlStateValueOn) ? YES : NO) ignoreSubscriber:self];
+    LookinMeasureState state = ((button.state == NSControlStateValueOn) ? LookinMeasureState_locked : LookinMeasureState_no);
+    [manager.measureState setIntegerValue:state ignoreSubscriber:self];
 }
 
-- (void)_handleMeasureDidChange:(LookinMsgActionParams *)param {
+- (void)_handleMeasureStateDidChange:(LookinMsgActionParams *)param {
     NSButton *button = param.relatedObject;
-    BOOL boolValue = param.boolValue;
-    button.state = boolValue ? NSControlStateValueOn : NSControlStateValueOff;
+    LookinMeasureState measureState = param.integerValue;
+    button.state = (measureState != LookinMeasureState_no);
 }
 
 #pragma mark - 懒加载

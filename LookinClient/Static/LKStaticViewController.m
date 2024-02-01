@@ -70,7 +70,7 @@ NSString *const LKAppShowConsoleNotificationName = @"LKAppShowConsoleNotificatio
     [super setView:view];
     
     LKPreferenceManager *preferenceManager = [LKPreferenceManager mainManager];
-    [preferenceManager.isMeasuring subscribe:self action:@selector(_handleToggleMeasure:) relatedObject:nil];
+    [preferenceManager.measureState subscribe:self action:@selector(_handleMeasureStateChange:) relatedObject:nil];
     
     LKStaticHierarchyDataSource *dataSource = [LKStaticHierarchyDataSource sharedInstance];
     
@@ -406,10 +406,11 @@ NSString *const LKAppShowConsoleNotificationName = @"LKAppShowConsoleNotificatio
     [LKHelper openCustomConfigWebsite];
 }
 
-- (void)_handleToggleMeasure:(LookinMsgActionParams *)param {
-    BOOL isMeasuring = param.boolValue;
-    self.dashboardController.view.hidden = isMeasuring;
-    self.measureController.view.hidden = !isMeasuring;
+- (void)_handleMeasureStateChange:(LookinMsgActionParams *)param {
+    LookinMeasureState state = param.integerValue;
+    BOOL isMeasure = (state != LookinMeasureState_no);
+    self.dashboardController.view.hidden = isMeasure;
+    self.measureController.view.hidden = !isMeasure;
 }
 
 - (void)handleSelectItemDidChange {

@@ -35,6 +35,12 @@ typedef NS_ENUM(NSInteger, LookinPreferredCallStackType) {
     LookinPreferredCallStackTypeRaw    // 原始堆栈
 };
 
+typedef NS_ENUM(NSInteger, LookinMeasureState) {
+    LookinMeasureState_no,    // 没有处于测距模式
+    LookinMeasureState_unlocked, // 处于测距模式，但未锁定，此时松开手指就会导致退出测距模式
+    LookinMeasureState_locked    // 处于测距模式，且锁定，此时松开手指不会退出测距模式
+};
+
 @interface LKPreferenceManager : NSObject
 
 + (instancetype)mainManager;
@@ -60,6 +66,9 @@ typedef NS_ENUM(NSInteger, LookinPreferredCallStackType) {
 @property(nonatomic, assign) BOOL enableReport;
 
 @property(nonatomic, assign) BOOL rgbaFormat;
+
+/// 0 ~ 2
+@property(nonatomic, assign) NSInteger imageContrastLevel;
 
 /// 是否自动将选中的 UIView/CALayer 作为控制台的目标对象
 @property(nonatomic, assign) BOOL syncConsoleTarget;
@@ -92,8 +101,8 @@ extern NSString *const NotificationName_DidChangeSectionShowing;
 
 @property(nonatomic, strong, readonly) LookinDoubleMsgAttribute *previewScale;
 
-/// param 里的 userInfo 为 NSNumber(BOOL)，如果为 YES 则表示本次 measure 是由快捷键触发的
-@property(nonatomic, strong, readonly) LookinBOOLMsgAttribute *isMeasuring;
+/// 参数是 LookinMeasureState
+@property(nonatomic, strong, readonly) LookinIntegerMsgAttribute *measureState;
 
 /// 是否用户正在按住 cmd 键而处于快速选择模式
 @property(nonatomic, strong, readonly) LookinBOOLMsgAttribute *isQuickSelecting;

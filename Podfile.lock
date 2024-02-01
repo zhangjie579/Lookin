@@ -7,7 +7,7 @@ PODS:
   - AppCenter/Core (4.4.3)
   - AppCenter/Crashes (4.4.3):
     - AppCenter/Core
-  - LookinShared (1.2.4)
+  - LookinShared (1.2.6)
   - ReactiveObjC (3.1.0)
   - Sparkle (1.27.1)
 
@@ -29,7 +29,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AppCenter: 3fd04aa1b166e16fdb03ec81dabe488aece83fbd
-  LookinShared: 6a2f8601159965ce727a6fc49102fb65aaeabea2
+  LookinShared: 94844c84d1d9c1e05e3bfe5de13cee9a387cf913
   ReactiveObjC: 2a38ea15335de4119d8b17caf1db1484f61db902
   Sparkle: 23f98b268284c8c03e6228230fc8f1807ef041d5
 

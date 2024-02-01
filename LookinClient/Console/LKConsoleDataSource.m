@@ -79,7 +79,7 @@
     }
     // 内容中不能有:
     if ([text containsString:@":"]) {
-        NSString *className = obj.completedSelfClassName;
+        NSString *className = obj.rawClassName;
         NSString *address = obj.memoryAddress;
         NSString *errDesc = [NSString stringWithFormat:NSLocalizedString(@"You can click \"Pause\" button near the bottom-left corner in Xcode to pause your iOS app, and input in Xcode console like the contents below:\nexpr [((%@ *)%@) %@]", nil), className, address, text];
         return [RACSignal error:LookinErrorMake(NSLocalizedString(@"Lookin doesn't support invoking methods with arguments yet.", nil), errDesc)];
@@ -99,7 +99,7 @@
             LKConsoleDataSourceRowItem *item = [LKConsoleDataSourceRowItem new];
             item.type = LKConsoleDataSourceRowItemTypeSubmit;
             item.normalText = text;
-            item.highlightText = [NSString stringWithFormat:@"<%@: %@>", obj.shortSelfClassName, obj.memoryAddress];
+            item.highlightText = [NSString stringWithFormat:@"<%@: %@>", obj.lk_simpleDemangledClassName, obj.memoryAddress];
             item;
         }) atIndex:(rowItems.count - 1)];
         if (returnDescription.length) {
@@ -111,7 +111,7 @@
             }) atIndex:(rowItems.count - 1)];
         }
         if (returnObject) {
-            NSString *message = [NSString stringWithFormat:@"<%@: %@> => %@", obj.shortSelfClassName, obj.memoryAddress, text];
+            NSString *message = [NSString stringWithFormat:@"<%@: %@> => %@", obj.lk_simpleDemangledClassName, obj.memoryAddress, text];
             [self _addRecentObject:returnObject message:message];
         }
         
@@ -120,7 +120,7 @@
 }
 
 - (RACSignal *)makeObjectAsCurrent:(LookinObject *)obj {
-    NSString *className = obj.completedSelfClassName;
+    NSString *className = obj.rawClassName;
     if (!className.length) {
         return [RACSignal error:LookinErr_Inner];
     }
@@ -133,7 +133,7 @@
     }
     
     @weakify(self);
-    return [[[LKAppsManager sharedInstance].inspectingApp fetchSelectorNamesWithClass:obj.completedSelfClassName hasArg:YES] doNext:^(NSArray<NSString *> *sels) {
+    return [[[LKAppsManager sharedInstance].inspectingApp fetchSelectorNamesWithClass:obj.rawClassName hasArg:YES] doNext:^(NSArray<NSString *> *sels) {
         @strongify(self);
         self.classesToSelsDict[className] = sels;
         self.currentObject = obj;
@@ -141,7 +141,7 @@
 }
 
 - (NSArray<NSString *> *)currentObjectSelectorNameList {
-    return self.classesToSelsDict[self.currentObject.completedSelfClassName];
+    return self.classesToSelsDict[self.currentObject.rawClassName];
 }
 
 - (void)clearHistoryContents {

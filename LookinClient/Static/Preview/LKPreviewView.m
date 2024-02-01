@@ -5,6 +5,8 @@
 //  Created by Li Kai on 2019/8/17.
 //  https://lookin.work
 //
+//  该类的代码实现，借鉴甚至直接复制了很多 https://github.com/TalkingData/YourView 项目的 SceneKit 相关代码
+//  Lookin 项目鸣谢：https://qxh1ndiez2w.feishu.cn/docx/YIFjdE4gIolp3hxn1tGckiBxnWf
 
 #import "LKPreviewView.h"
 #import "LKDisplayItemNode.h"
@@ -98,6 +100,8 @@ const CGFloat LookinPreviewMaxZInterspace = 1;
 }
 
 - (void)renderWithDisplayItems:(NSArray<LookinDisplayItem *> *)items discardCache:(BOOL)discardCache {
+    NSLog(@"LKPreviewView - render %@ items", @(items.count));
+    
     self.flatDisplayItems = items;
     
     NSMutableArray<LKDisplayItemNode *> *nodesToBeDiscarded = nil;
@@ -165,6 +169,9 @@ const CGFloat LookinPreviewMaxZInterspace = 1;
     }];
     NSUInteger zIndexOffset = round(maxZIndex * 0.5);
     
+    // 没这个 SCNTransaction 的话，收起、展开时图像没动画
+    [SCNTransaction begin];
+    
     [self.displayItemNodes enumerateObjectsUsingBlock:^(LKDisplayItemNode * _Nonnull node, NSUInteger idx, BOOL * _Nonnull stop) {
         LookinDisplayItem *item = node.displayItem;
         // 将 "1, 2, 3, 4, 5 ..." 这样的 zIndex 排序调整为 “-2，-1，0，1，2 ...”，这样旋转时 Y 轴就会位于 zIndex 为中间值的那个 layer 的位置
@@ -179,10 +186,12 @@ const CGFloat LookinPreviewMaxZInterspace = 1;
         SCNVector3 position = node.position;
         position.z = adjustedZIndex * interspace + offsetToAvoidOverlapBug;
         
-        [SCNTransaction begin];
         node.position = position;
-        [SCNTransaction commit];
     }];
+    
+    // 切记：要把 SCNTransaction commit 放到 for 循环外面，不能放到 for 循环里面。否则短时间内大量细碎的 SCNTransaction 会导致渲染很慢
+    [SCNTransaction commit];
+//    NSLog(@"SCNTransaction commit");
 }
 
 - (void)_updateZIndexForItem:(LookinDisplayItem *)item {

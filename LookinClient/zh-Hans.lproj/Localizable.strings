@@ -21,6 +21,8 @@
 "Preferences" = "偏好设置";
 "Appearance" = "外观";
 "Double click" = "双击图层";
+"Image contrast" = "图像对比度";
+"Adjust this option to use a deeper layer selection color." = "调整该选项以使用更深的图层选中色";
 "Expand or collapse layer" = "展开或折叠";
 "Focus on layer" = "聚焦";
 "Dark Mode" = "深色";
@@ -194,3 +196,11 @@
 "This object may not be a UIView or CALayer." = "该对象可能不是个 UIView 或 CALayer";
 "How to add custom properties…" = "如何添加自定义属性…";
 "How to display more member variables…" = "如何显示更多成员变量…";
+
+"Click to view…" = "点击以查看…";
+"Reveal in panel…" = "在主面板中展示…";
+"Normal" = "普通";
+"Medium" = "中";
+"High" = "高";
+"Navigate…" = "跳转至文件…";
+"Cancel measure after key up." = "松开键盘后退出测距模式";

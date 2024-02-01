@@ -194,3 +194,15 @@
 "This object may not be a UIView or CALayer." = "This object may not be a UIView or CALayer.";
 "How to add custom properties…" = "How to add custom properties…";
 "How to display more member variables…" = "How to display more member variables…";
+
+"Click to view…" = "Click to view…";
+"Reveal in panel…" = "Reveal in panel…";
+"Image contrast" = "Image contrast";
+"Adjust this option to use a deeper layer selection color." = "Adjust this option to use a deeper layer selection color.";
+"Normal" = "Normal";
+"Medium" = "Medium";
+"High" = "High";
+"Jump to %@ …" = "Jump to %@ …";
+"Navigate…" = "Navigate…";
+"Cancel measure after key up." = "Cancel measure after key up.";
+"Lookin Documentation Collection" = "Lookin Documentation Collection";

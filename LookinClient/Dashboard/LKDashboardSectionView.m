@@ -22,9 +22,11 @@
 #import "LKDashboardAttributeRelationView.h"
 #import "LKDashboardAttributeConstraintsView.h"
 #import "LKDashboardAttributeTextView.h"
+#import "LKDashboardAttributeShadowView.h"
 #import "LKPreferenceManager.h"
 #import "LKDashboardAttributeOpenImageView.h"
 #import "KcDashboardAttributeDebugMethodView.h"
+#import "LKDashboardAttributeJsonView.h"
 
 @interface LKDashboardSectionView ()
 
@@ -33,6 +35,7 @@
 @property(nonatomic, strong) CALayer *topSepLayer;
 
 @property(nonatomic, strong) NSButton *manageButton;
+@property(nonatomic, strong) NSButton *jsonPopupButton;
 
 @end
 
@@ -82,13 +85,21 @@
         contentsX = self.manageButton.$maxX + 6;
     }
     
+    if (self.jsonPopupButton.isVisible) {
+        $(self.jsonPopupButton).width(30).height(28).right(-5).y(0);
+    }
+    
     if (!self.topSepLayer.hidden) {
         $(self.topSepLayer).x(contentsX).width(selfWidth).height(1).y(0);
         contentsY = DashboardAttrItemVerInterspace;
     }
     
     if (self.titleLabel.isVisible) {
-        $(self.titleLabel).x(contentsX).width(selfWidth).heightToFit.y(self.topSepLayer.hidden ? 0 : _titleMarginTop);
+        CGFloat titleWidth = selfWidth;
+        if (self.jsonPopupButton.isVisible) {
+            titleWidth -= 20;
+        }
+        $(self.titleLabel).x(contentsX).width(titleWidth).heightToFit.y(self.topSepLayer.hidden ? 0 : _titleMarginTop);
         contentsY = self.titleLabel.$maxY + DashboardAttrItemVerInterspace;
     }
     
@@ -127,7 +138,11 @@
         height += DashboardAttrItemVerInterspace;
     }
     if (self.titleLabel.isVisible) {
-        height += [self.titleLabel sizeThatFits:NSSizeMax].height + _titleMarginTop;
+        CGFloat titleWidth = limitedSize.width;
+        if (self.jsonPopupButton.isVisible) {
+            titleWidth -= 20;
+        }
+        height += [self.titleLabel sizeThatFits:NSMakeSize(titleWidth, CGFLOAT_MAX)].height + _titleMarginTop;
     }
     __block CGFloat prevMaxX = 0;
     height = [attrViews lookin_reduceCGFloat:^CGFloat(CGFloat accumulator, NSUInteger idx, LKDashboardAttributeView *view) {
@@ -206,6 +221,15 @@
         obj.hidden = YES;
     }];
     
+    BOOL hasJSONAttr = [self.attrSection.attributes lookin_any:^BOOL(LookinAttribute *obj) {
+        return obj.attrType == LookinAttrTypeJson;
+    }];
+    if (hasJSONAttr) {
+        [self showJSONPopupButton];
+    } else {
+        [self hideJSONPopupButton];
+    }
+    
     [self setNeedsLayout:YES];
 }
 
@@ -243,6 +267,10 @@
             return [LKDashboardAttributeSizeView class];
         case LookinAttrTypeNSString:
             return [LKDashboardAttributeTextView class];
+        case LookinAttrTypeShadow:
+            return [LKDashboardAttributeShadowView class];
+        case LookinAttrTypeJson:
+            return [LKDashboardAttributeJsonView class];
         case LookinAttrTypeCustomObj:
             if ([identifier isEqualToString:LookinAttr_UITableView_RowsNumber_Number]) {
                 return [LKDashboardAttributeRowsCountView class];
@@ -266,6 +294,32 @@
             NSAssert(NO, @"");
             return nil;
     }
+}
+
+- (void)showJSONPopupButton {
+    if (self.jsonPopupButton) {
+        return;
+    }
+    self.jsonPopupButton = [NSButton buttonWithImage:NSImageMake(@"open_newwindow") target:self action:@selector(_handleJSONPopupButton)];
+    self.jsonPopupButton.bezelStyle = NSBezelStyleRoundRect;
+    self.jsonPopupButton.bordered = NO;
+    [self addSubview:self.jsonPopupButton];
+    [self addSubview:self.jsonPopupButton];
+}
+
+- (void)hideJSONPopupButton {
+    [self.jsonPopupButton removeFromSuperview];
+}
+
+- (void)_handleJSONPopupButton {
+    LKDashboardAttributeJsonView *view = (LKDashboardAttributeJsonView *)[self.attrViews lookin_firstFiltered:^BOOL(LKDashboardAttributeView *obj) {
+        return obj.attribute.attrType == LookinAttrTypeJson;
+    }];
+    if (![view isKindOfClass:[LKDashboardAttributeJsonView class]]) {
+        NSAssert(NO, @"");
+        return;
+    }
+    [view showInNewWindow];
 }
 
 #pragma mark - Manage
@@ -321,13 +375,10 @@
         return nil;
     }
     switch (attr.attrType) {
-        case LookinAttrTypeNSString:
-        case LookinAttrTypeUIColor:
-        case LookinAttrTypeEnumString:
-        case LookinAttrTypeDouble:
-            return attr.displayTitle;
-        default:
+        case LookinAttrTypeBOOL:
             return nil;
+        default:
+            return attr.displayTitle;
     }
 }
 

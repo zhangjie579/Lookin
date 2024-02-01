@@ -13,6 +13,7 @@
 #import "LKColorIndicatorLayer.h"
 #import "LKUserActionManager.h"
 #import "LookinDisplayItem+LookinClient.h"
+#import "LKDanceUIAttrMaker.h"
 @import AppCenter;
 @import AppCenterAnalytics;
 
@@ -189,9 +190,13 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
 //        }
         
         if (!self.serverSideIsSwiftProject) {
-            if ([obj.displayingObject.completedSelfClassName containsString:@"."]) {
+            if ([obj.displayingObject.lk_completedDemangledClassName containsString:@"."]) {
                 _serverSideIsSwiftProject = YES;
             }
+        }
+        
+        if (obj.customInfo.danceuiSource.length > 0) {
+            [LKDanceUIAttrMaker makeDanceUIJumpAttribute:obj danceSource:obj.customInfo.danceuiSource];
         }
         
         if (obj.isUserCustom) {
@@ -278,9 +283,9 @@ NSString * const LKHierarchyDataSourceReloadHierarchyNotification = @"LKHierarch
         [[NSColorPanel sharedColorPanel] close];
     }
 
-    if (!selectedItem && self.preferenceManager.isMeasuring.currentBOOLValue) {
+    if (!selectedItem && self.preferenceManager.measureState.currentIntegerValue != LookinMeasureState_no) {
         // 如果当前在测距，则取消
-        [self.preferenceManager.isMeasuring setBOOLValue:NO ignoreSubscriber:nil];
+        [self.preferenceManager.measureState setIntegerValue:LookinMeasureState_no ignoreSubscriber:nil];
     }
 }
 
