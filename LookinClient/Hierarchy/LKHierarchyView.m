@@ -17,6 +17,7 @@
 #import "LKTutorialManager.h"
 #import "LKTextFieldView.h"
 #import "LKTipsView.h"
+#import "LKStaticAsyncUpdateManager.h"
 
 static NSString * const kMenuBindKey_RowView = @"view";
 static CGFloat const kRowHeight = 28;
@@ -291,70 +292,41 @@ extern NSString *const LKAppShowConsoleNotificationName;
             item.title = NSLocalizedString(@"Focus", nil);
             item;
         })];
-        [menu addItem:({
-            NSMenuItem *item = [NSMenuItem new];
-            item.target = self;
-            item.action = @selector(_handlePrintItem:);
-            item.title = NSLocalizedString(@"Print", nil);
-            item;
-        })];
-        [menu addItem:[NSMenuItem separatorItem]];        
-    }
-
-    if (displayItem.isExpandable) {
-        [menu addItem:({
-            NSMenuItem *item = [NSMenuItem new];
-            item.target = self;
-            item.action = @selector(_handleExpandRecursively:);
-            item.title = NSLocalizedString(@"Expand recursively", nil);
-            item;
-        })];
-        [menu addItem:({
-            NSMenuItem *item = [NSMenuItem new];
-            item.target = self;
-            item.action = @selector(_handleCollapseChildren:);
-            item.title = NSLocalizedString(@"Collapse children", nil);
-            item;
-        })];
-    }
-
-    // 显示和隐藏图像
-    [menu addItem:[NSMenuItem separatorItem]];
-    
-    if ([displayItem hasPreviewBoxAbility]) {
-        if (displayItem.inNoPreviewHierarchy) {
+        if (!self.dataSource.isReadOnly) {
             [menu addItem:({
                 NSMenuItem *item = [NSMenuItem new];
                 item.target = self;
-                item.action = @selector(_handleShowPreview:);
-                if (displayItem.doNotFetchScreenshotReason == LookinFetchScreenshotPermitted) {
-                    item.title = NSLocalizedString(@"Show screenshot", nil);
-                } else {
-                    item.title = NSLocalizedString(@"Show layer border", nil);
+                item.action = @selector(_handlePrintItem:);
+                item.title = NSLocalizedString(@"Print", nil);
+                item;
+            })];
+        }
+        
+        [menu addItem:[NSMenuItem separatorItem]];
+        
+        if (!self.dataSource.isReadOnly) {
+            BOOL isUpdating = [LKStaticAsyncUpdateManager sharedInstance].isUpdating;
+            [menu addItem:({
+                NSMenuItem *item = [NSMenuItem new];
+                item.title = NSLocalizedString(@"Reload layer", nil);
+                if (!isUpdating) {
+                    item.target = self;
+                    item.action = @selector(_handleReloadSelfItem:);
                 }
                 item;
             })];
-        } else {
             [menu addItem:({
                 NSMenuItem *item = [NSMenuItem new];
-                item.target = self;
-                item.action = @selector(_handleCancelPreview:);
-                item.title = NSLocalizedString(@"Hide screenshot this time", nil);
+                item.title = NSLocalizedString(@"Reload layer and its children", nil);
+                if (!isUpdating) {
+                    item.target = self;
+                    item.action = @selector(_handleReloadSelfAndChildrenItem:);
+                }
                 item;
             })];
         }
     }
     
-    if (displayItem.groupScreenshot) {
-        [menu addItem:({
-            NSMenuItem *item = [NSMenuItem new];
-            item.target = self;
-            item.action = @selector(_handleExportScreenshot:);
-            item.title = NSLocalizedString(@"Export screenshot…", nil);
-            item;
-        })];        
-    }
-
     // 复制文字
     NSMutableArray<NSString *> *stringsToCopy = [NSMutableArray array];
     
@@ -403,8 +375,53 @@ extern NSString *const LKAppShowConsoleNotificationName;
         })];
     }];
     
+    [menu addItem:[NSMenuItem separatorItem]];
+
+    if (displayItem.isExpandable) {
+        [menu addItem:({
+            NSMenuItem *item = [NSMenuItem new];
+            item.target = self;
+            item.action = @selector(_handleExpandRecursively:);
+            item.title = NSLocalizedString(@"Expand recursively", nil);
+            item;
+        })];
+        [menu addItem:({
+            NSMenuItem *item = [NSMenuItem new];
+            item.target = self;
+            item.action = @selector(_handleCollapseChildren:);
+            item.title = NSLocalizedString(@"Collapse children", nil);
+            item;
+        })];
+    }
+
+    // 显示和隐藏图像
+    [menu addItem:[NSMenuItem separatorItem]];
+    
+    if ([displayItem hasPreviewBoxAbility]) {
+        if (displayItem.inNoPreviewHierarchy) {
+            [menu addItem:({
+                NSMenuItem *item = [NSMenuItem new];
+                item.target = self;
+                item.action = @selector(_handleShowPreview:);
+                if (displayItem.doNotFetchScreenshotReason == LookinFetchScreenshotPermitted) {
+                    item.title = NSLocalizedString(@"Show screenshot", nil);
+                } else {
+                    item.title = NSLocalizedString(@"Show layer border", nil);
+                }
+                item;
+            })];
+        } else {
+            [menu addItem:({
+                NSMenuItem *item = [NSMenuItem new];
+                item.target = self;
+                item.action = @selector(_handleCancelPreview:);
+                item.title = NSLocalizedString(@"Hide screenshot this time", nil);
+                item;
+            })];
+        }
+    }
+    
     if (!displayItem.isUserCustom && !displayItem.inNoPreviewHierarchy) {
-        [menu addItem:[NSMenuItem separatorItem]];
         [menu addItem:({
             NSMenuItem *item = [NSMenuItem new];
             item.target = self;
@@ -412,6 +429,18 @@ extern NSString *const LKAppShowConsoleNotificationName;
             item.title = NSLocalizedString(@"Hide screenshot forever…", nil);
             item;
         })];
+    }
+    
+    [menu addItem:[NSMenuItem separatorItem]];
+    
+    if (displayItem.groupScreenshot) {
+        [menu addItem:({
+            NSMenuItem *item = [NSMenuItem new];
+            item.target = self;
+            item.action = @selector(_handleExportScreenshot:);
+            item.title = NSLocalizedString(@"Export screenshot…", nil);
+            item;
+        })];        
     }
 }
 
@@ -431,6 +460,24 @@ extern NSString *const LKAppShowConsoleNotificationName;
     LKHierarchyRowView *view = [menuItem.menu lookin_getBindObjectForKey:kMenuBindKey_RowView];
     LookinDisplayItem *item = view.displayItem;
     [[NSNotificationCenter defaultCenter] postNotificationName:LKAppShowConsoleNotificationName object:item];
+}
+
+- (void)_handleReloadSelfItem:(NSMenuItem *)menuItem {
+    LKHierarchyRowView *view = [menuItem.menu lookin_getBindObjectForKey:kMenuBindKey_RowView];
+    LookinDisplayItem *item = view.displayItem;
+    if (!item) {
+        return;
+    }
+    [[LKStaticAsyncUpdateManager sharedInstance] reloadSingleDisplayItem:item];
+}
+
+- (void)_handleReloadSelfAndChildrenItem:(NSMenuItem *)menuItem {
+    LKHierarchyRowView *view = [menuItem.menu lookin_getBindObjectForKey:kMenuBindKey_RowView];
+    LookinDisplayItem *item = view.displayItem;
+    if (!item) {
+        return;
+    }
+    [[LKStaticAsyncUpdateManager sharedInstance] reloadDisplayItemAndChildren:item];
 }
 
 - (void)_handleFocusCurrentItem:(NSMenuItem *)menuItem {
@@ -568,5 +615,12 @@ extern NSString *const LKAppShowConsoleNotificationName;
     return [self.displayItems lookin_hasIndex:row] ? self.displayItems[row] : nil;
 }
 
+- (LKStaticHierarchyDataSource *)realtimeDataSource {
+    if (![self.dataSource isKindOfClass:[LKStaticHierarchyDataSource class]]) {
+        NSAssert(NO, @"");
+        return nil;
+    }
+    return (LKStaticHierarchyDataSource *)self.dataSource;
+}
 
 @end

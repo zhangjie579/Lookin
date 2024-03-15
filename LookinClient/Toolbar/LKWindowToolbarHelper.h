@@ -20,6 +20,7 @@ extern NSToolbarItemIdentifier const LKToolBarIdentifier_Add;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Remove;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Measure;
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_Message;
+extern NSToolbarItemIdentifier const LKToolBarIdentifier_FastMode;
 
 /// 隐藏view, 调整可视化view视图
 extern NSToolbarItemIdentifier const LKToolBarIdentifier_AdjustVisableOfViews;

@@ -36,13 +36,13 @@
 @import AppCenter;
 @import AppCenterAnalytics;
 
-@interface LKStaticWindowController () <NSToolbarDelegate>
+@interface LKStaticWindowController () <NSToolbarDelegate, LKStaticAsyncUpdateManagerDelegate>
 
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSToolbarItem *> *toolbarItemsMap;
 
 /// 当拉取 hierarchy 和更新截图时，该属性为 YES
 @property(nonatomic, assign) BOOL isFetchingHierarchy;
-@property(nonatomic, assign) BOOL isSyncingScreenshots;
+@property(nonatomic, assign) BOOL isFetchingDetails;
 
 @end
 
@@ -77,41 +77,17 @@
         window.toolbar = toolbar;
 
         NSToolbarItem *reloadItem = self.toolbarItemsMap[LKToolBarIdentifier_Reload];
-        NSButton *reloadButton = (NSButton *)reloadItem.view;
         @weakify(self);
         LKStaticAsyncUpdateManager *updateManager = [LKStaticAsyncUpdateManager sharedInstance];
-        [updateManager.updateAll_ProgressSignal subscribeNext:^(RACTuple *  _Nullable x) {
-            @strongify(self);
-            NSNumber *received = (NSNumber *)x.first;
-            NSNumber *total = (NSNumber *)x.second;
-            reloadItem.label = [NSString stringWithFormat:@"%@ / %@", received, total];
 
-            if (!self.isSyncingScreenshots) {
-                self.isSyncingScreenshots = YES;
-
-                NSImage *image = NSImageMake(@"icon_stop");
-                image.template = YES;
-                reloadButton.image = image;
-            }
-
-            [self _showUSBLowSpeedTipsIfNeeded];
-        }];
-        [updateManager.updateAll_CompletionSignal subscribeNext:^(id  _Nullable x) {
-            @strongify(self);
-            self.isSyncingScreenshots = NO;
-            reloadItem.label = NSLocalizedString(@"Reload", nil);
-
-            NSImage *image = NSImageMake(@"icon_reload");
-            image.template = YES;
-            reloadButton.image = image;
-        }];
-
+        updateManager.delegate = self;
+        
         [[[RACSignal combineLatest:@[RACObserve(self, isFetchingHierarchy),
-                                     RACObserve(self, isSyncingScreenshots)]] distinctUntilChanged] subscribeNext:^(RACTuple * _Nullable x) {
+                                     RACObserve(self, isFetchingDetails)]] distinctUntilChanged] subscribeNext:^(RACTuple * _Nullable x) {
             @strongify(self);
-            [@[LKToolBarIdentifier_App, LKToolBarIdentifier_Console] enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [@[LKToolBarIdentifier_App, LKToolBarIdentifier_Console, LKToolBarIdentifier_FastMode] enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                 NSToolbarItem *item = self.toolbarItemsMap[obj];
-                if (self.isFetchingHierarchy || self.isSyncingScreenshots) {
+                if (self.isFetchingHierarchy || self.isFetchingDetails) {
                     item.enabled = NO;
                 } else {
                     item.enabled = YES;
@@ -187,11 +163,10 @@
 }
 
 - (NSArray<NSToolbarItemIdentifier> *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar {
-    NSMutableArray *ret = @[LKToolBarIdentifier_Reload, LKToolBarIdentifier_App, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Dimension, LKToolBarIdentifier_Rotation, LKToolBarIdentifier_Setting, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Scale,
-        // 添加
-        NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_AdjustVisableOfViews, NSToolbarFlexibleSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_focusOnSelectedView,
+    NSMutableArray *ret = @[LKToolBarIdentifier_Reload, LKToolBarIdentifier_FastMode, LKToolBarIdentifier_App, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Dimension, LKToolBarIdentifier_Rotation, LKToolBarIdentifier_Setting, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_Scale, 
+                            // 添加
+                            NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_AdjustVisableOfViews, NSToolbarFlexibleSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier, LKToolBarIdentifier_focusOnSelectedView,
                             LKToolBarIdentifier_Measure, LKToolBarIdentifier_Console].mutableCopy;
-    
     if ([[[LKMessageManager sharedInstance] queryMessages] count] > 0) {
         [ret addObject:LKToolBarIdentifier_Message];
         [MSACAnalytics trackEvent:@"Show Notification"];
@@ -232,6 +207,9 @@
             item.label = NSLocalizedString(@"Notifications", nil);
             item.target = self;
             item.action = @selector(_handleMessage:);
+        } else if ([item.itemIdentifier isEqualToString:LKToolBarIdentifier_FastMode]) {
+            item.target = self;
+            item.action = @selector(handleFastMode);
         }
     }
     return item;
@@ -241,13 +219,13 @@
 
 - (void)_handleInspectingAppDidEnd:(id)obj {
     self.isFetchingHierarchy = NO;
-    self.isSyncingScreenshots = NO;
+    self.isFetchingDetails = NO;
 }
 
 - (void)_handleReload {
-    if (self.isSyncingScreenshots) {
+    if (self.isFetchingDetails) {
         // 停止拉取
-        [[LKStaticAsyncUpdateManager sharedInstance] endUpdatingAll];
+        [[LKStaticAsyncUpdateManager sharedInstance] endUpdating];
         return;
     }
 
@@ -256,8 +234,8 @@
         [self popupAllInspectableAppsWithSource:MenuPopoverAppsListControllerEventSourceReloadButton];
         return;
     }
-
-    if (self.isFetchingHierarchy || self.isSyncingScreenshots) {
+    
+    if (self.isFetchingHierarchy) {
         return;
     }
 
@@ -300,6 +278,11 @@
 
 - (void)_handleConsole {
     self.viewController.showConsole = !self.viewController.showConsole;
+}
+
+- (void)handleFastMode {
+    BOOL boolValue = [LKPreferenceManager mainManager].fastMode.currentBOOLValue;
+    [[LKPreferenceManager mainManager].fastMode setBOOLValue:!boolValue ignoreSubscriber:nil];
 }
 
 - (void)_handleMessage:(NSButton *)button {
@@ -389,29 +372,13 @@
     [[LKPreferenceManager mainManager].freeRotation setBOOLValue:!boolValue ignoreSubscriber:nil];
 }
 
-#pragma mark - Others
-
-- (void)_showUSBLowSpeedTipsIfNeeded {
-    if (TutorialMng.hasAlreadyShowedTipsThisLaunch || TutorialMng.USBLowSpeed) {
-        return;
-    }
-    if (!InspectingApp || InspectingApp.appInfo.deviceType == LookinAppInfoDeviceSimulator || [LKStaticHierarchyDataSource sharedInstance].flatItems.count < 170) {
-        return;
-    }
-
-    TutorialMng.hasAlreadyShowedTipsThisLaunch = YES;
-    [[LKTutorialManager sharedInstance] showPopoverOfView:self.toolbarItemsMap[LKToolBarIdentifier_Reload].view text:NSLocalizedString(@"Inspecting via USB is slower than inspecting a Xcode simulator.", nil) learned:^{
-        [LKTutorialManager sharedInstance].USBLowSpeed = YES;
-    }];
-}
-
 #pragma mark - <LKAppMenuManagerDelegate>
 
 - (void)appMenuManagerDidSelectReload {
     if (self.isFetchingHierarchy) {
         return;
     }
-    if (self.isSyncingScreenshots) {
+    if (self.isFetchingDetails) {
         NSError *error = LookinErrorMake(NSLocalizedString(@"Cannot reload at this time", NIL), NSLocalizedString(@"Please wait until current sync is completed. You can get sync progress in the upper-left corner of this window.", nil));
         [[NSAlert alertWithError:error] beginSheetModalForWindow:self.window completionHandler:nil];
         return;
@@ -548,6 +515,45 @@
         btn.title = @"聚焦";
         btn.tag = 0;
     }
+}
+
+/// LKStaticAsyncUpdateManagerDelegate
+- (void)detailUpdateTasksTotalCount:(NSUInteger)totalCount finishedCount:(NSUInteger)finishedCount {
+    NSToolbarItem *reloadItem = self.toolbarItemsMap[LKToolBarIdentifier_Reload];
+    NSButton *reloadButton = (NSButton *)reloadItem.view;
+    
+    BOOL isFetching = (totalCount > finishedCount);
+    
+    if (isFetching) {
+        if (self.isFetchingDetails) {
+            // 继续维持 fetch 状态
+        } else {
+            // 进入 fetch 状态
+            self.isFetchingDetails = YES;
+            
+            NSImage *image = NSImageMake(@"icon_stop");
+            image.template = YES;
+            reloadButton.image = image;
+        }
+        reloadItem.label = [NSString stringWithFormat:@"%@ / %@", @(finishedCount), @(totalCount)];
+        
+    } else {
+        if (self.isFetchingDetails) {
+            // 退出 fetch 状态
+            self.isFetchingDetails = NO;
+            reloadItem.label = NSLocalizedString(@"Reload", nil);
+            
+            NSImage *image = NSImageMake(@"icon_reload");
+            image.template = YES;
+            reloadButton.image = image;
+        } else {
+            // 继续维持“非 fetch”状态
+        }
+    }
+}
+
+- (void)detailUpdateReceivedError:(NSError *)error {
+    AlertError(error, self.window);
 }
 
 @end

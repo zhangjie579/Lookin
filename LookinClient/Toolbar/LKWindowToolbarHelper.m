@@ -30,6 +30,8 @@ NSToolbarItemIdentifier const LKToolBarIdentifier_Console = @"15";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Rotation = @"16";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Measure = @"17";
 NSToolbarItemIdentifier const LKToolBarIdentifier_Message = @"18";
+NSToolbarItemIdentifier const LKToolBarIdentifier_FastMode = @"19";
+
 
 /// 隐藏view
 NSToolbarItemIdentifier const LKToolBarIdentifier_AdjustVisableOfViews = @"21";
@@ -216,7 +218,25 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
         item.minSize = NSMakeSize(48, 34);
         return item;
     }
+    
+    if ([identifier isEqualToString:LKToolBarIdentifier_FastMode]) {
+        NSImage *image = NSImageMake(@"icon_turbo");
+        image.template = YES;
 
+        NSButton *button = [NSButton new];
+        [button setImage:image];
+        button.bezelStyle = NSBezelStyleTexturedRounded;
+        [button setButtonType:NSButtonTypePushOnPushOff];
+        
+        NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:LKToolBarIdentifier_FastMode];
+        item.label = NSLocalizedString(@"Fast Mode", nil);
+        item.view = button;
+        item.minSize = NSMakeSize(60, 34);
+        
+        [manager.fastMode subscribe:self action:@selector(_handleFastModeDidChange:) relatedObject:button sendAtOnce:YES];
+        return item;
+    }
+    
     if ([identifier isEqualToString:LKToolBarIdentifier_Add]) {
         NSImage *image = [NSImage imageNamed:NSImageNameAddTemplate];
         image.template = YES;
@@ -352,6 +372,12 @@ static NSString * const Key_BindingAppInfo = @"AppInfo";
     NSSlider *slider = param.relatedObject;
     CGFloat scale = param.doubleValue;
     slider.doubleValue = scale;
+}
+
+- (void)_handleFastModeDidChange:(LookinMsgActionParams *)param {
+    NSButton *button = param.relatedObject;
+    BOOL boolValue = param.boolValue;
+    button.state = boolValue ? NSControlStateValueOn : NSControlStateValueOff;
 }
 
 - (void)_handleDimensionDidChange:(LookinMsgActionParams *)param {
