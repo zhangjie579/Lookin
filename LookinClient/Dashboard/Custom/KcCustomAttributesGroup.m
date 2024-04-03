@@ -37,6 +37,7 @@
             @"dump对象: kc_dumpSwift",
             @"获取所有成员变量: kc_dump_allIvarDescription",
             @"获取imageView的image信息: kc_debug_imageInfo",
+            @"获取imageView的origin url信息: kc_debug_imageOriginURLString",
             @"view层级: kc_dump_viewHierarchy",
             @"ViewController的层级: kc_dump_viewControllerHierarchy",
             @"自动布局层级: kc_dump_autoLayoutHierarchy",
