@@ -46,6 +46,7 @@
 #import "Lookin_PTProtocol.h"
 #import "Lookin_PTUSBHub.h"
 #import "Peertalk.h"
+#import "KcAppPushDataModel.h"
 #import "LookinIvarTrace.h"
 
 FOUNDATION_EXPORT double LookinSharedVersionNumber;

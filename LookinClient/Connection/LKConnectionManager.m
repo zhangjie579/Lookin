@@ -14,12 +14,17 @@
 #import "LookinAppInfo.h"
 #import "LKConnectionRequest.h"
 #import "LKServerVersionRequestor.h"
+#import "KcAppPushDataModel.h"
 
-static NSIndexSet * PushFrameTypeList() {
+static NSIndexSet * PushFrameTypeList(void) {
     static NSIndexSet *list;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSMutableIndexSet *set = [NSMutableIndexSet indexSet];
+        
+        // 自定义的
+        [set addIndex:KcAppPushDataModel.pushFrameType];
+        
         list = set.copy;
     });
     return list;

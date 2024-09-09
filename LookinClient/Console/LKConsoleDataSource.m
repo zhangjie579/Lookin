@@ -12,6 +12,8 @@
 #import "LookinDisplayItem.h"
 #import "LKAppsManager.h"
 #import "LKPreferenceManager.h"
+#import "LKConnectionManager.h"
+#import "KcAppPushDataModel.h"
 
 @interface LKConsoleDataSource ()
 
@@ -52,6 +54,36 @@
                                           NSArray<LookinObject *> *objs = $(item.hostViewControllerObject, item.layerObject, item.viewObject).array;
                                           return objs;
                                       }];
+        
+        @weakify(self);
+        // 接收socket
+        [LKConnectionManager.sharedInstance.didReceivePush subscribeNext:^(RACTuple  * _Nullable tuple) {
+//            RACTuple *tuple = [RACTuple tupleWithObjects:channel, @(type), unarchivedData, nil];
+            
+            if (!tuple || !tuple.third || [tuple.second integerValue] != KcAppPushDataModel.pushFrameType || ![tuple.third isKindOfClass:KcAppPushDataModel.class]) {
+                return;
+            }
+            
+            KcAppPushDataModel *model = tuple.third;
+            
+            KcAppPushConsoleLog *_Nullable consoleLogModel = [model decodeToConsoleLogModel];
+            
+            if (!consoleLogModel || !consoleLogModel.consoleLog || consoleLogModel.consoleLog.length <= 0) {
+                return;
+            }
+            
+            @strongify(self);
+            NSMutableArray<LKConsoleDataSourceRowItem *> *rowItems = self.rowItems.mutableCopy;
+            
+            [rowItems addObject:({
+                LKConsoleDataSourceRowItem *item = [LKConsoleDataSourceRowItem new];
+                item.type = LKConsoleDataSourceRowItemTypeReturn;
+                item.normalText = consoleLogModel.consoleLog;
+                item;
+            })];
+            
+            self.rowItems = rowItems;
+        }];
     }
     return self;
 }
