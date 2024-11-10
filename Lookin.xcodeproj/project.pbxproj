@@ -13,6 +13,8 @@
 		1892DD1C2AF258890016D61B /* LookinDisplayItem+LookinClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 1892DD1B2AF258890016D61B /* LookinDisplayItem+LookinClient.m */; };
 		1892DD292AF25EDE0016D61B /* LookinMsgTargetAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 1892DD252AF25EDE0016D61B /* LookinMsgTargetAction.m */; };
 		1892DD2A2AF25EDE0016D61B /* LookinMsgAttribute.m in Sources */ = {isa = PBXBuildFile; fileRef = 1892DD282AF25EDE0016D61B /* LookinMsgAttribute.m */; };
+		2F2A534D2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F2A534C2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m */; };
+		2F2A53502CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F2A534F2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m */; };
 		2FC88841281E1972002C36FD /* KcCustomToolBarItems.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */; };
 		2FC88844281E1A09002C36FD /* KcDoubleSlide.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88843281E1A09002C36FD /* KcDoubleSlide.m */; };
 		601AD5E52A64D6110013F490 /* LKHierarchyDataSource+KeyDown.m in Sources */ = {isa = PBXBuildFile; fileRef = 601AD5E42A64D6110013F490 /* LKHierarchyDataSource+KeyDown.m */; };
@@ -233,6 +235,10 @@
 		1892DD262AF25EDE0016D61B /* LookinMsgTargetAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LookinMsgTargetAction.h; sourceTree = "<group>"; };
 		1892DD272AF25EDE0016D61B /* LookinMsgAttribute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LookinMsgAttribute.h; sourceTree = "<group>"; };
 		1892DD282AF25EDE0016D61B /* LookinMsgAttribute.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LookinMsgAttribute.m; sourceTree = "<group>"; };
+		2F2A534B2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcDashboardAttributeGetPropertyInfoView.h; sourceTree = "<group>"; };
+		2F2A534C2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDashboardAttributeGetPropertyInfoView.m; sourceTree = "<group>"; };
+		2F2A534E2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcDashboardAttributeSearchKeyPathView.h; sourceTree = "<group>"; };
+		2F2A534F2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDashboardAttributeSearchKeyPathView.m; sourceTree = "<group>"; };
 		2FC8883F281E1972002C36FD /* KcCustomToolBarItems.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcCustomToolBarItems.h; sourceTree = "<group>"; };
 		2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcCustomToolBarItems.m; sourceTree = "<group>"; };
 		2FC88842281E1A09002C36FD /* KcDoubleSlide.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcDoubleSlide.h; sourceTree = "<group>"; };
@@ -623,6 +629,17 @@
 			path = Message;
 			sourceTree = "<group>";
 		};
+		2F2A534A2CE08C64005BF5AB /* KcCustom */ = {
+			isa = PBXGroup;
+			children = (
+				2F2A534B2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.h */,
+				2F2A534C2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m */,
+				2F2A534E2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.h */,
+				2F2A534F2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m */,
+			);
+			path = KcCustom;
+			sourceTree = "<group>";
+		};
 		5D159F647DFD4AA3F8E7F9E7 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -696,6 +713,7 @@
 		AA05CCD1221ED50B0086CDD1 /* AttributeView */ = {
 			isa = PBXGroup;
 			children = (
+				2F2A534A2CE08C64005BF5AB /* KcCustom */,
 				AA05CCD8221ED5F60086CDD1 /* LKDashboardAttributeColorView.h */,
 				1822E2C92B9396B50007C0B2 /* LKDashboardTextControlEditingFlag.h */,
 				1822E2CA2B9396B50007C0B2 /* LKDashboardTextControlEditingFlag.m */,
@@ -1457,6 +1475,7 @@
 				AAD2BED7226B327000E83D01 /* LKOutlineRowView.m in Sources */,
 				A26EF69527F89F83005A9E4E /* ShortCocoaCore.m in Sources */,
 				A213803D2821886B009BFE60 /* LKPerformanceReporter.m in Sources */,
+				2F2A534D2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m in Sources */,
 				AA66C5A1231924BD00085C76 /* LKDashboardAccessoryWindowController.m in Sources */,
 				A77AA1822AEEE095006A7BF4 /* LKVersionComparer.m in Sources */,
 				AA50753D22A27EAD00D2A5AC /* LKConsoleDataSourceRowItem.m in Sources */,
@@ -1470,6 +1489,7 @@
 				AA0A2DDB233F81D9008BF946 /* LKPopPanel.m in Sources */,
 				AAA8C15D21CC17680017A345 /* AppDelegate.m in Sources */,
 				AAB872E6221C26B600C25294 /* LKStaticAsyncUpdateManager.m in Sources */,
+				2F2A53502CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m in Sources */,
 				AAB636C022B3854100885A2C /* LKDashboardAttributeClassView.m in Sources */,
 				AAA8C12E21CC17680017A345 /* LKHierarchyView.m in Sources */,
 				A77AA17B2AEED1B8006A7BF4 /* LKMessageManager.m in Sources */,

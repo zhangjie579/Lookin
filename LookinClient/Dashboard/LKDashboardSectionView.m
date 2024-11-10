@@ -26,6 +26,8 @@
 #import "LKPreferenceManager.h"
 #import "LKDashboardAttributeOpenImageView.h"
 #import "KcDashboardAttributeDebugMethodView.h"
+#import "KcDashboardAttributeGetPropertyInfoView.h"
+#import "KcDashboardAttributeSearchKeyPathView.h"
 #import "LKDashboardAttributeJsonView.h"
 
 @interface LKDashboardSectionView ()
@@ -286,6 +288,10 @@
                 return [LKDashboardAttributeEnumsView class];
             } else if ([identifier isEqualToString:LookinAttr_Kc_Debug_methodDesc]) {
                 return [KcDashboardAttributeDebugMethodView class];
+            } else if ([identifier isEqualToString:LookinAttr_Kc_Debug_getPropertyInfo]) {
+                return [KcDashboardAttributeGetPropertyInfoView class];
+            } else if ([identifier isEqualToString:LookinAttr_Kc_Debug_searchKeyPath]) {
+                return [KcDashboardAttributeSearchKeyPathView class];
             } else {
                 NSAssert(NO, @"");
                 return nil;

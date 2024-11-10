@@ -16,7 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface KcCustomAttributesGroup : NSObject
 
 /// 添加自定义的attributesGroup
-+ (NSArray<LookinAttributesGroup *> *)addCustomAttributesGroup;
++ (NSArray<LookinAttributesGroup *> *)addCustomAttributesGroupWithTargetDisplayItem:(nullable LookinDisplayItem *)targetDisplayItem;
+
++ (NSArray<NSString *> *)kcCustomIdentity;
 
 @end
 

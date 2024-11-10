@@ -185,7 +185,8 @@
 
 - (void)reloadWithGroupList:(NSArray<LookinAttributesGroup *> *)list {
     NSMutableArray<LookinAttributesGroup *> *attributesGroup = [[NSMutableArray alloc] initWithArray:list ?: @[]];
-    [attributesGroup addObjectsFromArray:[KcCustomAttributesGroup addCustomAttributesGroup]];
+    LookinDisplayItem *_Nullable targetDisplayItem = list.firstObject.attrSections.firstObject.attributes.firstObject.targetDisplayItem;
+    [attributesGroup addObjectsFromArray:[KcCustomAttributesGroup addCustomAttributesGroupWithTargetDisplayItem:targetDisplayItem]];
     
     self.groupList = attributesGroup;
     

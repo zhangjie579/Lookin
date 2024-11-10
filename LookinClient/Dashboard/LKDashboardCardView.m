@@ -23,6 +23,7 @@
 #import "LookinAttributesGroup+LookinClient.h"
 #import "LookinAttributesSection+LookinClient.h"
 #import "LKDashboardSectionViewPool.h"
+#import "KcCustomAttributesGroup.h"
 
 @interface LKDashboardCardView () <LKUserActionManagerDelegate, LKDashboardAccessoryWindowControllerDelegate>
 
@@ -146,8 +147,13 @@
     [self.sectionViewPool recycleAll];
 
     [self.attrGroup.attrSections enumerateObjectsUsingBlock:^(LookinAttributesSection * _Nonnull sec, NSUInteger idx, BOOL * _Nonnull stop) {
-        if (sec.identifier != LookinAttrSec_KcDebugMethod_Class && !sec.isUserCustom && ![[LKPreferenceManager mainManager] isSectionShowing:sec.identifier]) {
-            return;
+        if (!sec.isUserCustom && ![[LKPreferenceManager mainManager] isSectionShowing:sec.identifier]) {
+            
+            NSArray<NSString *> *kcCustomIdentity = [KcCustomAttributesGroup kcCustomIdentity];
+            
+            if (![kcCustomIdentity containsObject:sec.identifier]) {
+                return;
+            }
         }
         
         LKDashboardSectionView *secView = [self.sectionViewPool dequeViewForSection:sec];
@@ -269,6 +275,7 @@
                  LookinAttrGroup_UserCustom: NSImageMake(@"dashboard_custom"),
                  
                  LookinAttrGroup_KcDebugMethod: NSImageMake(@"icon_3d"),
+                 LookinAttrGroup_KcDebugCallObjcMethod: NSImageMake(@"dashboard_class"),
                  };
     });
     NSImage *image = dict[group.identifier];
