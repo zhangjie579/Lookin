@@ -15,8 +15,11 @@
 		1892DD2A2AF25EDE0016D61B /* LookinMsgAttribute.m in Sources */ = {isa = PBXBuildFile; fileRef = 1892DD282AF25EDE0016D61B /* LookinMsgAttribute.m */; };
 		2F2A534D2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F2A534C2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m */; };
 		2F2A53502CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F2A534F2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m */; };
+		2F2A5FC22CE0D011005BF5AB /* KcMenuContainerButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F2A5FC12CE0D011005BF5AB /* KcMenuContainerButton.m */; };
 		2FC88841281E1972002C36FD /* KcCustomToolBarItems.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */; };
 		2FC88844281E1A09002C36FD /* KcDoubleSlide.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88843281E1A09002C36FD /* KcDoubleSlide.m */; };
+		2FF3C6412CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FF3C6402CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m */; };
+		2FF3C6442CE5DF61007FE9D4 /* KcObjcMethodMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FF3C6432CE5DF61007FE9D4 /* KcObjcMethodMenu.m */; };
 		601AD5E52A64D6110013F490 /* LKHierarchyDataSource+KeyDown.m in Sources */ = {isa = PBXBuildFile; fileRef = 601AD5E42A64D6110013F490 /* LKHierarchyDataSource+KeyDown.m */; };
 		7BFFDF0F2AF12AA10039B828 /* LookinAttributesGroup+LookinClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 7BFFDF0E2AF12AA10039B828 /* LookinAttributesGroup+LookinClient.m */; };
 		7BFFDF122AF12E940039B828 /* LookinAttributesSection+LookinClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 7BFFDF112AF12E940039B828 /* LookinAttributesSection+LookinClient.m */; };
@@ -239,10 +242,16 @@
 		2F2A534C2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDashboardAttributeGetPropertyInfoView.m; sourceTree = "<group>"; };
 		2F2A534E2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcDashboardAttributeSearchKeyPathView.h; sourceTree = "<group>"; };
 		2F2A534F2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDashboardAttributeSearchKeyPathView.m; sourceTree = "<group>"; };
+		2F2A5FC02CE0D011005BF5AB /* KcMenuContainerButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcMenuContainerButton.h; sourceTree = "<group>"; };
+		2F2A5FC12CE0D011005BF5AB /* KcMenuContainerButton.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcMenuContainerButton.m; sourceTree = "<group>"; };
 		2FC8883F281E1972002C36FD /* KcCustomToolBarItems.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcCustomToolBarItems.h; sourceTree = "<group>"; };
 		2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcCustomToolBarItems.m; sourceTree = "<group>"; };
 		2FC88842281E1A09002C36FD /* KcDoubleSlide.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcDoubleSlide.h; sourceTree = "<group>"; };
 		2FC88843281E1A09002C36FD /* KcDoubleSlide.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDoubleSlide.m; sourceTree = "<group>"; };
+		2FF3C63F2CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcCallObjcMethodAttributeManager.h; sourceTree = "<group>"; };
+		2FF3C6402CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcCallObjcMethodAttributeManager.m; sourceTree = "<group>"; };
+		2FF3C6422CE5DF61007FE9D4 /* KcObjcMethodMenu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcObjcMethodMenu.h; sourceTree = "<group>"; };
+		2FF3C6432CE5DF61007FE9D4 /* KcObjcMethodMenu.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcObjcMethodMenu.m; sourceTree = "<group>"; };
 		4225D6261428134154CB341E /* Pods-LookinTestflight.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LookinTestflight.debug.xcconfig"; path = "Target Support Files/Pods-LookinTestflight/Pods-LookinTestflight.debug.xcconfig"; sourceTree = "<group>"; };
 		5E8E4C9C392BAAF93643C21E /* Pods-LookinClient.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LookinClient.release.xcconfig"; path = "Target Support Files/Pods-LookinClient/Pods-LookinClient.release.xcconfig"; sourceTree = "<group>"; };
 		601AD5E32A64D6110013F490 /* LKHierarchyDataSource+KeyDown.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LKHierarchyDataSource+KeyDown.h"; sourceTree = "<group>"; };
@@ -636,6 +645,12 @@
 				2F2A534C2CE08C81005BF5AB /* KcDashboardAttributeGetPropertyInfoView.m */,
 				2F2A534E2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.h */,
 				2F2A534F2CE08C99005BF5AB /* KcDashboardAttributeSearchKeyPathView.m */,
+				2F2A5FC02CE0D011005BF5AB /* KcMenuContainerButton.h */,
+				2F2A5FC12CE0D011005BF5AB /* KcMenuContainerButton.m */,
+				2FF3C63F2CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.h */,
+				2FF3C6402CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m */,
+				2FF3C6422CE5DF61007FE9D4 /* KcObjcMethodMenu.h */,
+				2FF3C6432CE5DF61007FE9D4 /* KcObjcMethodMenu.m */,
 			);
 			path = KcCustom;
 			sourceTree = "<group>";
@@ -1430,6 +1445,7 @@
 				AAA8C15921CC17680017A345 /* LKPreviewStageView.m in Sources */,
 				A717997A2B948E6D00190438 /* LKReloadSingleItemUpdateTaskMaker.m in Sources */,
 				1822E2CB2B9396B50007C0B2 /* LKDashboardTextControlEditingFlag.m in Sources */,
+				2FF3C6442CE5DF61007FE9D4 /* KcObjcMethodMenu.m in Sources */,
 				AA30216021F32908000B0084 /* LKColorIndicatorLayer.m in Sources */,
 				D4052AC9235CBD090033C961 /* LKMeasureTutorialView.m in Sources */,
 				AA049A1721E61B85008C6366 /* LKMenuPopoverSettingController.m in Sources */,
@@ -1440,6 +1456,7 @@
 				AAA8C12B21CC17680017A345 /* LKBaseView.m in Sources */,
 				AA3A7D0923003F5800997887 /* LKHierarchyHandlersPopoverItemView.m in Sources */,
 				D4224EEF2358ED3400ED9626 /* LKMeasureController.m in Sources */,
+				2F2A5FC22CE0D011005BF5AB /* KcMenuContainerButton.m in Sources */,
 				AAA8C14021CC17680017A345 /* LKDashboardViewController.m in Sources */,
 				AAEF2C122308420400CFAC53 /* LKDisplayItemNode.m in Sources */,
 				AA17857E22DE65D20042C8F0 /* LKTutorialPopoverController.m in Sources */,
@@ -1545,6 +1562,7 @@
 				AA9CC2C522891EA20014D13B /* LKExportAccessoryView.m in Sources */,
 				AAEC35A52340EAB3009E5040 /* NSString+LookinClient.m in Sources */,
 				AA2F1AF623040552004725D6 /* NSArray+LookinClient.m in Sources */,
+				2FF3C6412CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m in Sources */,
 				AAB09028229D74F000159B15 /* LKOutlineItem.m in Sources */,
 				A70A0C352B17AA12009A1937 /* LKDashboardAttributeJsonView.m in Sources */,
 				AAC16CDA2282B5F400E67E0A /* LKTipsView.m in Sources */,

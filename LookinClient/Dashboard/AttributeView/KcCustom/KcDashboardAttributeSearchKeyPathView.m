@@ -7,11 +7,13 @@
 //
 
 #import "KcDashboardAttributeSearchKeyPathView.h"
-#import "LKAppsManager.h"
+#import "KcCallObjcMethodAttributeManager.h"
+#import "KcObjcMethodMenu.h"
+#import "KcMenuContainerButton.h"
 
-@interface KcDashboardAttributeSearchKeyPathView () <NSTextFieldDelegate>
+@interface KcDashboardAttributeSearchKeyPathView () <NSTextFieldDelegate, NSMenuDelegate>
 
-//@property(nonatomic, strong) NSButton *btn;
+@property(nonatomic, strong) KcMenuContainerButton *btn;
 
 @property(nonatomic, strong) NSTextField *textField;
 
@@ -24,6 +26,7 @@
 
 - (instancetype)initWithFrame:(NSRect)frame {
     if (self = [super initWithFrame:frame]) {
+        [self addSubview:self.btn];
         [self addSubview:self.textField];
         [self.textView class];
         [self addSubview:self.scrollView];
@@ -35,10 +38,14 @@
     [super layout];
     CGFloat itemWidth = self.frame.size.width;
     
-    CGFloat x = 5;
+    CGFloat x = 0;
     CGFloat y = 5;
-    self.textField.frame = CGRectMake(x, y, itemWidth - 2 * x, 25);
+    self.textField.frame = CGRectMake(x, y, itemWidth, 25);
+//    self.btn.frame = CGRectMake(CGRectGetMaxX(self.textField.frame) + 5, y, itemWidth - (CGRectGetMaxX(self.textField.frame) + 5), self.textField.frame.size.height);
     y = CGRectGetMaxY(self.textField.frame);
+    
+    self.btn.frame = CGRectMake(x, y + 5, itemWidth, 25);
+    y = CGRectGetMaxY(self.btn.frame);
     
     self.scrollView.frame = CGRectMake(0, y + 5, itemWidth, 180);
 }
@@ -48,11 +55,14 @@
     self.textView.string = @"";
     self.textField.stringValue = @"";
     
+    NSMenuItem *item = KcCallObjcMethodAttributeManager.sharedManager.keyPathMenu.menu.itemArray.firstObject;
+    [self updateTitleWithMenuItem:item];
+    
     [self setNeedsLayout:YES];
 }
 
 - (NSSize)sizeThatFits:(NSSize)limitedSize {
-    return NSMakeSize(limitedSize.width, 215);
+    return NSMakeSize(limitedSize.width, 245);
 }
 
 - (NSUInteger)numberOfColumnsOccupied {
@@ -68,62 +78,98 @@
         return;
     }
     
-    LookinObject *searchObjc = nil;
+    KcCallObjcMethodAttributeManager *manager = KcCallObjcMethodAttributeManager.sharedManager;
+    KcKeyPathObjcMethodMenu *keyPathMenu = manager.keyPathMenu;
     
-    LookinObject *viewObject = self.attribute.targetDisplayItem.viewObject;
-    searchObjc = viewObject;
-    
-    LookinObject *_Nullable hostViewControllerObject = self.attribute.targetDisplayItem.hostViewControllerObject;
-    
-    // 有vc的用vc
-    if (hostViewControllerObject) {
-        searchObjc = hostViewControllerObject;
-    }
+    NSDictionary<NSString *, id> *method = [keyPathMenu evalMethodStringWithItem:[keyPathMenu itemWithTitle:self.btn.title] keyPath:editingTextField.stringValue];
     
     @weakify(self);
-    [[LKAppsManager.sharedInstance.inspectingApp performSelectorWithText:[NSString stringWithFormat:@"[KcFindPropertyTooler searchPropertyWithValue:self keyPath: %@]", editingTextField.stringValue] oid:searchObjc.oid] subscribeNext:^(NSDictionary *dict) {
-        NSString *_Nullable returnDescription = dict[@"description"];
-        NSString *_Nullable errorLog = dict[@"errorLog"];
-
+    [[KcCallObjcMethodAttributeManager evalObjcMethod:method targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
         @strongify(self);
         
-        if (returnDescription.length) {
-            self.textView.string = returnDescription;
-        } else if (errorLog.length) {
-            self.textView.string = [NSString stringWithFormat:@"%@\n%@", errorLog, @"pod 'KcDebugSwift' 并且版本 >= 0.1.5"];
+        self.textView.string = message ?: @"";
+    }];
+}
+
+#pragma mark - <NSMenuDelegate>
+
+- (void)menuNeedsUpdate:(NSMenu *)menu {
+    [menu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull menuItem, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (menuItem.hasSubmenu) {
+            [menuItem.submenu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull subMenuItem, NSUInteger idx, BOOL * _Nonnull stop) {
+                [self _updateMenuItem:subMenuItem];
+            }];
         } else {
-            self.textView.string = @"";
+            [self _updateMenuItem:menuItem];
         }
     }];
 }
 
+- (void)_updateMenuItem:(NSMenuItem *)menuItem {
+    menuItem.target = self;
+    menuItem.action = @selector(_handlePresetMenuItem:);
+
+    if ([menuItem.title isEqualToString:self.btn.title]) {
+        // if 中后面的 == 是用来判断二者都是 nil 的情况
+        menuItem.state = NSControlStateValueOn;
+    } else {
+        menuItem.state = NSControlStateValueOff;
+    }
+}
+
+- (void)_handlePresetMenuItem:(NSMenuItem *)item {
+    [self updateTitleWithMenuItem:item];
+    
+    if (self.textField.stringValue.length) {
+        KcCallObjcMethodAttributeManager *manager = KcCallObjcMethodAttributeManager.sharedManager;
+        
+        NSDictionary<NSString *, id> *method = [manager.keyPathMenu evalMethodStringWithItem:item keyPath:self.textField.stringValue];
+        
+        @weakify(self);
+        [[KcCallObjcMethodAttributeManager evalObjcMethod:method targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
+            @strongify(self);
+            
+            self.textView.string = message ?: @"";
+        }];
+    }
+}
+
 #pragma mark - Private
+
+- (void)_selectItem:(NSEvent *)event {
+    NSMenu *menu = KcCallObjcMethodAttributeManager.sharedManager.keyPathMenu.menu;
+    menu.delegate = self;
+    
+    [NSMenu popUpContextMenu:menu withEvent:event forView:self.btn];
+}
+
+- (void)updateTitleWithMenuItem:(NSMenuItem *)menuItem {
+    [self.btn setAttributedTitle:$(menuItem.title).textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
+}
 
 #pragma mark - 懒加载
 
 - (NSTextField *)textField {
     if (!_textField) {
         _textField = [[NSTextField alloc] init];
-        _textField.font = NSFontMake(12);
+        _textField.font = NSFontMake(13);
         _textField.backgroundColor = [NSColor colorNamed:@"DashboardCardValueBGColor"];
-        _textField.placeholderString = @"请输入查询的keyPath";
+        _textField.placeholderString = @"输入keyPath";
         _textField.delegate = self;
     }
     return _textField;
 }
 
-//- (NSButton *)btn {
-//    if (!_btn) {
-//        _btn = [NSButton new];
-//        _btn.ignoresMultiClick = YES;
-//        _btn.target = self;
-//        _btn.action = @selector(_executeGetPropertyList);
-//        _btn.font = NSFontMake(13);
-////        [_propertyInfoBtn setTitle:@"获取当前对象的属性列表"];
-//        [_btn setAttributedTitle:$(@"获取属性列表").textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
-//    }
-//    return _btn;
-//}
+- (KcMenuContainerButton *)btn {
+    if (!_btn) {
+        _btn = [KcMenuContainerButton new];
+        _btn.ignoresMultiClick = YES;
+        _btn.clickTarget = self;
+        _btn.clickAction = @selector(_selectItem:);
+        _btn.font = NSFontMake(13);
+    }
+    return _btn;
+}
 
 - (NSScrollView *)scrollView {
     if (!_scrollView) {
@@ -146,4 +192,3 @@
 }
 
 @end
-

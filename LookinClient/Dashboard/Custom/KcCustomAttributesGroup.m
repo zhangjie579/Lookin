@@ -60,16 +60,10 @@
         LookinAttributesSection *debugMethodSection = [[LookinAttributesSection alloc] init];
         debugMethodSection.identifier = LookinAttrGroup_KcDebugCallObjcMethod_Class;
         
-        LookinAttribute *debugMethodAttribute = [[LookinAttribute alloc] init];
-        debugMethodAttribute.identifier = LookinAttr_Kc_Debug_getPropertyInfo;
-        debugMethodAttribute.attrType = LookinAttrTypeCustomObj;
-        debugMethodAttribute.value = @"1"; // 获取view的属性方法
-        debugMethodAttribute.targetDisplayItem = targetDisplayItem;
-        
         LookinAttribute *debugMethodAttribute0 = [[LookinAttribute alloc] init];
         debugMethodAttribute0.identifier = LookinAttr_Kc_Debug_getPropertyInfo;
         debugMethodAttribute0.attrType = LookinAttrTypeCustomObj;
-        debugMethodAttribute0.value = @"2"; // 获取属性name
+        debugMethodAttribute0.value = @""; // 获取属性name
         debugMethodAttribute0.targetDisplayItem = targetDisplayItem;
         
         LookinAttribute *debugMethodAttribute1 = [[LookinAttribute alloc] init];
@@ -79,7 +73,6 @@
         debugMethodAttribute1.targetDisplayItem = targetDisplayItem;
         
         debugMethodSection.attributes = @[
-            debugMethodAttribute,
             debugMethodAttribute0,
             debugMethodAttribute1,
         ];

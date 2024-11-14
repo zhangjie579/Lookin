@@ -8,20 +8,16 @@
 
 #import "KcDashboardAttributeGetPropertyInfoView.h"
 #import "LKAppsManager.h"
+#import "KcMenuContainerButton.h"
+#import "KcCallObjcMethodAttributeManager.h"
+#import "KcObjcMethodMenu.h"
 
-typedef enum : NSUInteger {
-    KcPropertyInfoTypeGet,
-    KcPropertyInfoTypeIvarName,
-} KcPropertyInfoType;
+@interface KcDashboardAttributeGetPropertyInfoView () <NSMenuDelegate>
 
-@interface KcDashboardAttributeGetPropertyInfoView ()
-
-@property(nonatomic, strong) NSButton *propertyInfoBtn;
+@property(nonatomic, strong) KcMenuContainerButton *propertyInfoBtn;
 
 @property(nonatomic, strong) NSTextView *propertyInfoTextView;
 @property(nonatomic, strong) NSScrollView *propertyInfoScrollView;
-
-@property(nonatomic, assign) KcPropertyInfoType propertyInfoType;
 
 @end
 
@@ -44,101 +40,82 @@ typedef enum : NSUInteger {
     CGFloat y = 5;
     self.propertyInfoBtn.frame = CGRectMake(x, y, itemWidth - 2 * x, 40);
     y = CGRectGetMaxY(self.propertyInfoBtn.frame);
-    
-    CGFloat propertyInfoScrollViewH = 80;
-    if (self.propertyInfoType == KcPropertyInfoTypeGet) {
-        propertyInfoScrollViewH = 180;
-    } else if (self.propertyInfoType == KcPropertyInfoTypeIvarName) {
-        propertyInfoScrollViewH = 80;
-    } else {
-        NSAssert(NO, @"要实现类型");
-    }
-    
-    self.propertyInfoScrollView.frame = CGRectMake(0, y + 5, itemWidth, propertyInfoScrollViewH);
+
+    self.propertyInfoScrollView.frame = CGRectMake(0, y + 5, itemWidth, 180);
 }
 
 - (void)renderWithAttribute {
     // 清空、初始化
     self.propertyInfoTextView.string = @"";
     
-    if ([self.attribute.value isEqualToString:@"1"]) {
-        self.propertyInfoType = KcPropertyInfoTypeGet;
-        [self.propertyInfoBtn setAttributedTitle:$(@"获取属性列表").textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
-    } else if ([self.attribute.value isEqualToString:@"2"]) {
-        self.propertyInfoType = KcPropertyInfoTypeIvarName;
-        [self.propertyInfoBtn setAttributedTitle:$(@"查询当前对象属性名").textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
-    } else {
-        NSAssert(NO, @"要实现类型");
-        self.propertyInfoType = KcPropertyInfoTypeGet;
-        [self.propertyInfoBtn setAttributedTitle:$(@"获取属性列表").textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
-    }
+    NSMenuItem *item = KcCallObjcMethodAttributeManager.sharedManager.noParamMethodMenu.menu.itemArray.firstObject;
+    [self updateTitleWithMenuItem:item];
     
     [self setNeedsLayout:YES];
 }
 
 - (NSSize)sizeThatFits:(NSSize)limitedSize {
-
-    if (self.propertyInfoType == KcPropertyInfoTypeGet) {
-        return NSMakeSize(limitedSize.width, 230);
-    } else if (self.propertyInfoType == KcPropertyInfoTypeIvarName) {
-        return NSMakeSize(limitedSize.width, 130);
-    } else {
-        NSAssert(NO, @"要实现类型");
-        return NSMakeSize(limitedSize.width, 230);
-    }
+    return NSMakeSize(limitedSize.width, 230);
 }
 
-#pragma mark - Private
+#pragma mark - <NSMenuDelegate>
 
-/// 执行获取对象属性的方法
-- (void)_executeGetPropertyList {
-    LookinObject *searchObjc = nil;
-    
-    LookinObject *viewObject = self.attribute.targetDisplayItem.viewObject;
-    searchObjc = viewObject;
-    
-    LookinObject *_Nullable hostViewControllerObject = self.attribute.targetDisplayItem.hostViewControllerObject;
-    
-    // 有vc的用vc
-    if (hostViewControllerObject) {
-        searchObjc = hostViewControllerObject;
-    }
-    
-    NSString *objcMethod = nil;
-    
-    if (self.propertyInfoType == KcPropertyInfoTypeGet) {
-        objcMethod = @"[KcFindPropertyTooler propertyListWithValue:self]";
-    } else if (self.propertyInfoType == KcPropertyInfoTypeIvarName) {
-        objcMethod = @"[self kc_debug_findUIPropertyName]";
-    } else {
-        NSAssert(NO, @"要实现");
-    }
-    
-    @weakify(self);
-    [[LKAppsManager.sharedInstance.inspectingApp performSelectorWithText:objcMethod oid:searchObjc.oid] subscribeNext:^(NSDictionary *dict) {
-        NSString *_Nullable returnDescription = dict[@"description"];
-        NSString *_Nullable errorLog = dict[@"errorLog"];
-
-        @strongify(self);
-        
-        if (returnDescription.length) {
-            self.propertyInfoTextView.string = returnDescription;
-        } else if (errorLog.length) {
-            self.propertyInfoTextView.string = [NSString stringWithFormat:@"%@\n%@", errorLog, @"pod 'KcDebugSwift' 并且版本 >= 0.1.5"];
+- (void)menuNeedsUpdate:(NSMenu *)menu {
+    [menu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull menuItem, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (menuItem.hasSubmenu) {
+            [menuItem.submenu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull subMenuItem, NSUInteger idx, BOOL * _Nonnull stop) {
+                [self _updateMenuItem:subMenuItem];
+            }];
         } else {
-            self.propertyInfoTextView.string = @"";
+            [self _updateMenuItem:menuItem];
         }
     }];
 }
 
+- (void)_updateMenuItem:(NSMenuItem *)menuItem {
+    menuItem.target = self;
+    menuItem.action = @selector(_handlePresetMenuItem:);
+
+    if ([menuItem.title isEqualToString:self.propertyInfoBtn.title]) {
+        // if 中后面的 == 是用来判断二者都是 nil 的情况
+        menuItem.state = NSControlStateValueOn;
+    } else {
+        menuItem.state = NSControlStateValueOff;
+    }
+}
+
+- (void)_handlePresetMenuItem:(NSMenuItem *)item {
+    [self updateTitleWithMenuItem:item];
+    
+    @weakify(self);
+    [[KcCallObjcMethodAttributeManager.sharedManager evalObjcMethodWithItem:item targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString *  _Nullable message) {
+        @strongify(self);
+        
+        self.propertyInfoTextView.string = message;
+    }];
+}
+
+#pragma mark - Private
+
+- (void)_executeGetPropertyList:(NSEvent *)event {
+    NSMenu *menu = KcCallObjcMethodAttributeManager.sharedManager.noParamMethodMenu.menu;
+    menu.delegate = self;
+    
+    [NSMenu popUpContextMenu:menu withEvent:event forView:self.propertyInfoBtn];
+}
+
+- (void)updateTitleWithMenuItem:(NSMenuItem *)menuItem {
+    [self.propertyInfoBtn setAttributedTitle:$(menuItem.title).textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
+}
+
 #pragma mark - 懒加载
 
-- (NSButton *)propertyInfoBtn {
+- (KcMenuContainerButton *)propertyInfoBtn {
     if (!_propertyInfoBtn) {
-        _propertyInfoBtn = [NSButton new];
+        _propertyInfoBtn = [KcMenuContainerButton new];
         _propertyInfoBtn.ignoresMultiClick = YES;
-        _propertyInfoBtn.target = self;
-        _propertyInfoBtn.action = @selector(_executeGetPropertyList);
+        _propertyInfoBtn.clickTarget = self;
+        _propertyInfoBtn.clickAction = @selector(_executeGetPropertyList:);
         _propertyInfoBtn.font = NSFontMake(13);
         [_propertyInfoBtn setAttributedTitle:$(@"获取属性列表").textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
     }
@@ -157,7 +134,7 @@ typedef enum : NSUInteger {
 - (NSTextView *)propertyInfoTextView {
     if (!_propertyInfoTextView) {
         _propertyInfoTextView = self.propertyInfoScrollView.documentView;
-        _propertyInfoTextView.font = NSFontMake(12);
+        _propertyInfoTextView.font = NSFontMake(13);
         _propertyInfoTextView.backgroundColor = [NSColor colorNamed:@"DashboardCardValueBGColor"];
         _propertyInfoTextView.textContainerInset = NSMakeSize(2, 4);
         _propertyInfoTextView.editable = false;
