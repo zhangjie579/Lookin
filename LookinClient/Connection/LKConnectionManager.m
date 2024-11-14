@@ -329,7 +329,7 @@ static NSIndexSet * PushFrameTypeList(void) {
         }
         return;
     }
-    if (channel.activeRequests.count && requestType != LookinRequestTypePing) {
+    if (channel.activeRequests.count && requestType != LookinRequestTypePing && requestType != LookinRequestTypePerformSelector) {
         // 检查是否有相同 type 的旧请求尚在进行中，如果有则移除之前的旧请求（旧请求会被报告 error）
         NSSet<LKConnectionRequest *> *requestsToBeDiscarded = [channel.activeRequests lookin_filter:^BOOL(LKConnectionRequest *obj) {
             return (obj.type == requestType);
