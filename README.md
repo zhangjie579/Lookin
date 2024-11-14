@@ -53,3 +53,81 @@ macOS 端软件：https://github.com/hughkli/Lookin/
 
 # 工作机会
 如果你也是 iOS/Android 客户端开发，并且有换工作的意向，那么诚挚邀请你加入我的部门：https://bytedance.feishu.cn/docx/SAcgdoQuAouyXAxAqy8cmrT2n4b
+
+
+# 新增右侧工具栏调用执行app方法
+
+`pod 'LookinServer', :git=>'https://github.com/zhangjie579/LookinServer.git', :branch => "personal/samzj", :subspecs => ['Swift'], :configurations => ['Debug']`
+`pod 'KcDebugSwift', '0.1.6', :configurations => ['Debug']`
+
+## 注入自定义的方法执行 - demo
+
+```objc
+@interface NSObject (KcLookinFeature1)
+
+@end
+
+@implementation NSObject (KcLookinFeature1)
+
+/// JSON string
+/// { title: xx, methodName: 方法名, isUIViewMethod: 是否uiview的方法 }
++ (NSString *)kc_injectedCustomFeature_0 {
+    
+    NSArray<NSDictionary<NSString *, id> *> *list = @[
+        @{
+            // @Class 会被替换成当前lookin item的类名
+            @"methodName": @"[NSObject kc_dump_propertyDescriptionForClass:@Class]",
+            @"isUIViewMethod": @NO,
+            @"title": @"dump当前class属性",
+        },
+        @{
+            // self 会替换成当前lookin item 对象那个view、viewController
+            @"methodName": @"[self kc_dump_autoLayoutHierarchy]",
+            @"isUIViewMethod": @YES,
+            @"title": @"自动布局",
+        },
+    ];
+    
+    NSData *data = [NSJSONSerialization dataWithJSONObject:list options:0 error:nil];
+    if (data.length) {
+        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    } else {
+        return nil;
+    }
+}
+
++ (NSString *)kc_injectedCustomKeyPathMethod {
+    
+    NSArray<NSDictionary<NSString *, id> *> *list = @[
+        @{
+            @"methodName": @"[KcFindPropertyTooler searchPropertyWithValue:self keyPath: %@]",
+            @"isUIViewMethod": @NO,
+            @"title": @"查询属性value",
+        },
+    ];
+    
+    NSData *data = [NSJSONSerialization dataWithJSONObject:list options:0 error:nil];
+    if (data.length) {
+        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    } else {
+        return nil;
+    }
+}
+
+@end
+```
+
+## 当前注入方法的几个方法名
+```objc
+// 可以传入keyPath参数的方法
+@"[NSObject kc_injectedCustomKeyPathMethod]",
+@"[NSObject kc_injectedCustomKeyPathMethod_0]",
+@"[NSObject kc_injectedCustomKeyPathMethod_1]",
+@"[NSObject kc_injectedCustomKeyPathMethod_2]",
+
+// 不能传入参数的方法
+@"[NSObject kc_injectedCustomFeature]",
+@"[NSObject kc_injectedCustomFeature_0]",
+@"[NSObject kc_injectedCustomFeature_1]",
+@"[NSObject kc_injectedCustomFeature_2]",
+```
