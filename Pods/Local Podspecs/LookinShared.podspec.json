@@ -1,6 +1,6 @@
 {
   "name": "LookinShared",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "summary": "The shared files between client and server side of Lookin.",
   "description": "Embed this framework into your iOS project to enable Lookin mac app.",
   "homepage": "https://lookin.work",
@@ -11,11 +11,12 @@
   "platforms": {
     "ios": "9.0",
     "tvos": "9.0",
-    "osx": "10.14"
+    "osx": "10.14",
+    "visionos": "1.0"
   },
   "source": {
     "git": "https://github.com/QMUI/LookinServer.git",
-    "tag": "1.2.7"
+    "tag": "1.2.8"
   },
   "requires_arc": true,
   "source_files": [
