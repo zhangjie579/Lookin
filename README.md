@@ -78,6 +78,8 @@ macOS 端软件：https://github.com/hughkli/Lookin/
 
 ## 注入自定义的方法执行 - demo
 
+原理: 参考`LKSConfigManager`注入功能的方式, 加上动态执行oc代码的能力
+
 ```objc
 @interface NSObject (KcLookinFeature1)
 
@@ -87,7 +89,7 @@ macOS 端软件：https://github.com/hughkli/Lookin/
 
 /// JSON string
 /// { title: xx, methodName: 方法名, isUIViewMethod: 是否uiview的方法 }
-+ (NSString *)kc_injectedCustomFeature_0 {
++ (NSArray<NSDictionary<NSString *, id> *> *)lookin_kc_injectMethods {
     
     NSArray<NSDictionary<NSString *, id> *> *list = @[
         @{
@@ -104,15 +106,10 @@ macOS 端软件：https://github.com/hughkli/Lookin/
         },
     ];
     
-    NSData *data = [NSJSONSerialization dataWithJSONObject:list options:0 error:nil];
-    if (data.length) {
-        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    } else {
-        return nil;
-    }
+    return list;
 }
 
-+ (NSString *)kc_injectedCustomKeyPathMethod {
++ (NSArray<NSDictionary<NSString *, id> *> *)lookin_kc_injectKeyPathMethods {
     
     NSArray<NSDictionary<NSString *, id> *> *list = @[
         @{
@@ -122,28 +119,23 @@ macOS 端软件：https://github.com/hughkli/Lookin/
         },
     ];
     
-    NSData *data = [NSJSONSerialization dataWithJSONObject:list options:0 error:nil];
-    if (data.length) {
-        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    } else {
-        return nil;
-    }
+    return list;
 }
 
 @end
 ```
 
 ## 当前注入方法的几个方法名
+实现在`LKSConfigManager`类中
+
 ```objc
 // 可以传入keyPath参数的方法
-@"[NSObject kc_injectedCustomKeyPathMethod]",
-@"[NSObject kc_injectedCustomKeyPathMethod_0]",
-@"[NSObject kc_injectedCustomKeyPathMethod_1]",
-@"[NSObject kc_injectedCustomKeyPathMethod_2]",
+@"[NSObject lookin_kc_injectKeyPathMethods]",
+// 0 ~ 4
+@"[NSObject lookin_kc_injectKeyPathMethods_0]",
 
 // 不能传入参数的方法
-@"[NSObject kc_injectedCustomFeature]",
-@"[NSObject kc_injectedCustomFeature_0]",
-@"[NSObject kc_injectedCustomFeature_1]",
-@"[NSObject kc_injectedCustomFeature_2]",
+@"[NSObject lookin_kc_injectMethods]",
+// 0 ~ 4
+@"[NSObject lookin_kc_injectMethods_0]",
 ```

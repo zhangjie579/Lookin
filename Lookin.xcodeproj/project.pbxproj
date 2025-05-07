@@ -19,7 +19,6 @@
 		2FC88841281E1972002C36FD /* KcCustomToolBarItems.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88840281E1972002C36FD /* KcCustomToolBarItems.m */; };
 		2FC88844281E1A09002C36FD /* KcDoubleSlide.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FC88843281E1A09002C36FD /* KcDoubleSlide.m */; };
 		2FF3C6412CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FF3C6402CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m */; };
-		2FF3C6442CE5DF61007FE9D4 /* KcObjcMethodMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = 2FF3C6432CE5DF61007FE9D4 /* KcObjcMethodMenu.m */; };
 		601AD5E52A64D6110013F490 /* LKHierarchyDataSource+KeyDown.m in Sources */ = {isa = PBXBuildFile; fileRef = 601AD5E42A64D6110013F490 /* LKHierarchyDataSource+KeyDown.m */; };
 		7BFFDF0F2AF12AA10039B828 /* LookinAttributesGroup+LookinClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 7BFFDF0E2AF12AA10039B828 /* LookinAttributesGroup+LookinClient.m */; };
 		7BFFDF122AF12E940039B828 /* LookinAttributesSection+LookinClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 7BFFDF112AF12E940039B828 /* LookinAttributesSection+LookinClient.m */; };
@@ -250,8 +249,6 @@
 		2FC88843281E1A09002C36FD /* KcDoubleSlide.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcDoubleSlide.m; sourceTree = "<group>"; };
 		2FF3C63F2CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcCallObjcMethodAttributeManager.h; sourceTree = "<group>"; };
 		2FF3C6402CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcCallObjcMethodAttributeManager.m; sourceTree = "<group>"; };
-		2FF3C6422CE5DF61007FE9D4 /* KcObjcMethodMenu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KcObjcMethodMenu.h; sourceTree = "<group>"; };
-		2FF3C6432CE5DF61007FE9D4 /* KcObjcMethodMenu.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KcObjcMethodMenu.m; sourceTree = "<group>"; };
 		4225D6261428134154CB341E /* Pods-LookinTestflight.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LookinTestflight.debug.xcconfig"; path = "Target Support Files/Pods-LookinTestflight/Pods-LookinTestflight.debug.xcconfig"; sourceTree = "<group>"; };
 		5E8E4C9C392BAAF93643C21E /* Pods-LookinClient.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LookinClient.release.xcconfig"; path = "Target Support Files/Pods-LookinClient/Pods-LookinClient.release.xcconfig"; sourceTree = "<group>"; };
 		601AD5E32A64D6110013F490 /* LKHierarchyDataSource+KeyDown.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LKHierarchyDataSource+KeyDown.h"; sourceTree = "<group>"; };
@@ -649,8 +646,6 @@
 				2F2A5FC12CE0D011005BF5AB /* KcMenuContainerButton.m */,
 				2FF3C63F2CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.h */,
 				2FF3C6402CE5DE9E007FE9D4 /* KcCallObjcMethodAttributeManager.m */,
-				2FF3C6422CE5DF61007FE9D4 /* KcObjcMethodMenu.h */,
-				2FF3C6432CE5DF61007FE9D4 /* KcObjcMethodMenu.m */,
 			);
 			path = KcCustom;
 			sourceTree = "<group>";
@@ -1445,7 +1440,6 @@
 				AAA8C15921CC17680017A345 /* LKPreviewStageView.m in Sources */,
 				A717997A2B948E6D00190438 /* LKReloadSingleItemUpdateTaskMaker.m in Sources */,
 				1822E2CB2B9396B50007C0B2 /* LKDashboardTextControlEditingFlag.m in Sources */,
-				2FF3C6442CE5DF61007FE9D4 /* KcObjcMethodMenu.m in Sources */,
 				AA30216021F32908000B0084 /* LKColorIndicatorLayer.m in Sources */,
 				D4052AC9235CBD090033C961 /* LKMeasureTutorialView.m in Sources */,
 				AA049A1721E61B85008C6366 /* LKMenuPopoverSettingController.m in Sources */,

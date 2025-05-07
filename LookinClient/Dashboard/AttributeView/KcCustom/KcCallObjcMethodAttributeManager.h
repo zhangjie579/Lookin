@@ -7,20 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-@class KcNoParamObjcMethodMenu, KcKeyPathObjcMethodMenu;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface KcCallObjcMethodAttributeManager : NSObject
-
-@property (nonatomic, strong) KcNoParamObjcMethodMenu *noParamMethodMenu;
-
-@property (nonatomic, strong) KcKeyPathObjcMethodMenu *keyPathMenu;
-
-+ (instancetype)sharedManager;
-
-/// 执行对象方法
-- (RACSignal *)evalObjcMethodWithItem:(NSMenuItem *)item targetDisplayItem:(LookinDisplayItem *)targetDisplayItem;
 
 /// 执行对象方法
 /// objcMethod { "isUIViewMethod": false, "methodName": [xx xx] }

@@ -7,33 +7,9 @@
 //
 
 #import "KcCallObjcMethodAttributeManager.h"
-#import "KcObjcMethodMenu.h"
-#import "LKHierarchyDataSource.h"
 #import "LKAppsManager.h"
 
 @implementation KcCallObjcMethodAttributeManager
-
-+ (instancetype)sharedManager {
-    static dispatch_once_t onceToken;
-    static KcCallObjcMethodAttributeManager *manager;
-    dispatch_once(&onceToken, ^{
-        manager = [[KcCallObjcMethodAttributeManager alloc] init];
-    });
-    return manager;
-}
-
-- (instancetype)init {
-    if (self = [super init]) {
-        // 刷新数据源
-        // 1、这里要考虑切换app的情况 2、是否这时候太早了app还没连上
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_didUpdateApp) name:LKHierarchyDataSourceReloadHierarchyNotification object:nil];
-    }
-    return self;
-}
-
-- (void)dealloc {
-    [NSNotificationCenter.defaultCenter removeObserver:self];
-}
 
 #pragma mark - public
 
@@ -70,9 +46,6 @@
         }
     }
     
-//    @weakify(self);
-//    RACSignal *signal = [LKAppsManager.sharedInstance.inspectingApp performSelectorWithText:objcMethod oid:searchObjc.oid];
-    
     // 替换类名
     methodName = [methodName stringByReplacingOccurrencesOfString:@"@Class" withString:searchObjc.rawClassName];
     
@@ -88,30 +61,6 @@
             return @"nil";
         }
     }];
-}
-
-#pragma mark - private
-
-- (void)_didUpdateApp {
-    [self.noParamMethodMenu didUpdateApp];
-    
-    [self.keyPathMenu didUpdateApp];
-}
-
-#pragma mark - 懒加载
-
-- (KcNoParamObjcMethodMenu *)noParamMethodMenu {
-    if (!_noParamMethodMenu) {
-        _noParamMethodMenu = [[KcNoParamObjcMethodMenu alloc] init];
-    }
-    return _noParamMethodMenu;
-}
-
-- (KcKeyPathObjcMethodMenu *)keyPathMenu {
-    if (!_keyPathMenu) {
-        _keyPathMenu = [[KcKeyPathObjcMethodMenu alloc] init];
-    }
-    return _keyPathMenu;
 }
 
 @end

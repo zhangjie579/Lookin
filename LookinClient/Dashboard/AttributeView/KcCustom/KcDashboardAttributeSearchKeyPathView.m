@@ -8,8 +8,10 @@
 
 #import "KcDashboardAttributeSearchKeyPathView.h"
 #import "KcCallObjcMethodAttributeManager.h"
-#import "KcObjcMethodMenu.h"
 #import "KcMenuContainerButton.h"
+#import "LKHierarchyDataSource.h"
+#import "LKDashboardViewController.h"
+#import "LookinHierarchyInfo.h"
 
 @interface KcDashboardAttributeSearchKeyPathView () <NSTextFieldDelegate, NSMenuDelegate>
 
@@ -19,6 +21,10 @@
 
 @property(nonatomic, strong) NSTextView *textView;
 @property(nonatomic, strong) NSScrollView *scrollView;
+
+@property(nonatomic, strong) NSMutableArray<NSDictionary<NSString *, id> *> *evalMethods;
+
+@property(nonatomic, strong) NSMenu *methodMenu;
 
 @end
 
@@ -54,9 +60,34 @@
     // 清空、初始化
     self.textView.string = @"";
     self.textField.stringValue = @"";
+    [self.methodMenu removeAllItems];
+    [self.evalMethods removeAllObjects];
+    [self.evalMethods addObjectsFromArray:[KcDashboardAttributeSearchKeyPathView defaultMethods]];
     
-    NSMenuItem *item = KcCallObjcMethodAttributeManager.sharedManager.keyPathMenu.menu.itemArray.firstObject;
-    [self updateTitleWithMenuItem:item];
+    LKHierarchyDataSource *dataSource = self.dashboardViewController.currentDataSource;
+    NSArray<NSDictionary<NSString *, id> *> *_Nullable injectMethods = dataSource.rawHierarchyInfo.kc_injectKeyPathMethods;
+    if (injectMethods) {
+        [self.evalMethods addObjectsFromArray:injectMethods];
+    }
+    
+    [self.evalMethods enumerateObjectsUsingBlock:^(NSDictionary<NSString *,id> * _Nonnull dict, NSUInteger idx, BOOL * _Nonnull stop) {
+        [self.methodMenu addItem:({
+            NSMenuItem *menuItem = [NSMenuItem new];
+            menuItem.image = [[NSImage alloc] initWithSize:NSMakeSize(1, 22)];
+            menuItem.title = dict[@"title"];
+            menuItem.tag = idx;
+            menuItem.representedObject = @{
+                @"method": dict,
+            };
+            
+            menuItem;
+        })];
+    }];
+    
+    NSMenuItem *item = self.methodMenu.itemArray.firstObject;
+    if (item) {
+        [self updateTitleWithMenuItem:item];
+    }
     
     [self setNeedsLayout:YES];
 }
@@ -78,10 +109,8 @@
         return;
     }
     
-    KcCallObjcMethodAttributeManager *manager = KcCallObjcMethodAttributeManager.sharedManager;
-    KcKeyPathObjcMethodMenu *keyPathMenu = manager.keyPathMenu;
-    
-    NSDictionary<NSString *, id> *method = [keyPathMenu evalMethodStringWithItem:[keyPathMenu itemWithTitle:self.btn.title] keyPath:editingTextField.stringValue];
+    NSMenuItem *item = self.methodMenu.itemArray[self.btn.tag];
+    NSDictionary<NSString *, id> *method = [self evalMethodStringWithItem:item keyPath:self.textField.stringValue];
     
     @weakify(self);
     [[KcCallObjcMethodAttributeManager evalObjcMethod:method targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
@@ -108,22 +137,15 @@
 - (void)_updateMenuItem:(NSMenuItem *)menuItem {
     menuItem.target = self;
     menuItem.action = @selector(_handlePresetMenuItem:);
-
-    if ([menuItem.title isEqualToString:self.btn.title]) {
-        // if 中后面的 == 是用来判断二者都是 nil 的情况
-        menuItem.state = NSControlStateValueOn;
-    } else {
-        menuItem.state = NSControlStateValueOff;
-    }
+    
+    menuItem.state = menuItem.tag == self.btn.tag ? NSControlStateValueOn : NSControlStateValueOff;
 }
 
 - (void)_handlePresetMenuItem:(NSMenuItem *)item {
     [self updateTitleWithMenuItem:item];
     
     if (self.textField.stringValue.length) {
-        KcCallObjcMethodAttributeManager *manager = KcCallObjcMethodAttributeManager.sharedManager;
-        
-        NSDictionary<NSString *, id> *method = [manager.keyPathMenu evalMethodStringWithItem:item keyPath:self.textField.stringValue];
+        NSDictionary<NSString *, id> *method = [self evalMethodStringWithItem:item keyPath:self.textField.stringValue];
         
         @weakify(self);
         [[KcCallObjcMethodAttributeManager evalObjcMethod:method targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
@@ -137,14 +159,29 @@
 #pragma mark - Private
 
 - (void)_selectItem:(NSEvent *)event {
-    NSMenu *menu = KcCallObjcMethodAttributeManager.sharedManager.keyPathMenu.menu;
-    menu.delegate = self;
-    
-    [NSMenu popUpContextMenu:menu withEvent:event forView:self.btn];
+    [NSMenu popUpContextMenu:self.methodMenu withEvent:event forView:self.btn];
 }
 
 - (void)updateTitleWithMenuItem:(NSMenuItem *)menuItem {
     [self.btn setAttributedTitle:$(menuItem.title).textColor([NSColor colorNamed:@"DashboardCardValueColor"]).attrString];
+    
+    self.btn.tag = menuItem.tag;
+}
+
+/* 替换keyPath
+ @{
+     @"methodName": @"[self matchSuperviewsWithPropertyName: %@]",
+     @"isUIViewMethod": @YES,
+     @"title": @"superview属性",
+ },
+ */
+- (NSDictionary<NSString *, id> *)evalMethodStringWithItem:(NSMenuItem *)item keyPath:(NSString *)keyPath {
+    NSMutableDictionary<NSString *, id> *methodInfo = [NSMutableDictionary dictionaryWithDictionary:item.representedObject[@"method"]];
+    
+    NSString *name = [methodInfo[@"methodName"] stringByReplacingOccurrencesOfString:@"%@" withString:keyPath];
+    methodInfo[@"methodName"] = name;
+
+    return methodInfo;
 }
 
 #pragma mark - 懒加载
@@ -156,6 +193,7 @@
         _textField.backgroundColor = [NSColor colorNamed:@"DashboardCardValueBGColor"];
         _textField.placeholderString = @"输入keyPath";
         _textField.delegate = self;
+        _textField.tag = 0;
     }
     return _textField;
 }
@@ -189,6 +227,41 @@
         _textView.editable = false;
     }
     return _textView;
+}
+
+- (NSMutableArray<NSDictionary<NSString *,id> *> *)evalMethods {
+    if (!_evalMethods) {
+        _evalMethods = [NSMutableArray arrayWithArray:[KcDashboardAttributeSearchKeyPathView defaultMethods]];
+    }
+    return _evalMethods;
+}
+
+- (NSMenu *)methodMenu {
+    if (!_methodMenu) {
+        _methodMenu = [NSMenu new];
+        _methodMenu.delegate = self;
+    }
+    return _methodMenu;
+}
+
++ (NSArray<NSDictionary<NSString *, id> *> *)defaultMethods {
+    return @[
+        @{
+            @"methodName": @"[KcFindPropertyTooler searchPropertyWithValue:self keyPath: %@]",
+            @"isUIViewMethod": @NO,
+            @"title": @"查询keyPath",
+        },
+        @{
+            @"methodName": @"[self matchSubviewsWithPropertyName: %@]",
+            @"isUIViewMethod": @YES,
+            @"title": @"all子树keyPath",
+        },
+        @{
+            @"methodName": @"[self matchSuperviewsWithPropertyName: %@]",
+            @"isUIViewMethod": @YES,
+            @"title": @"superview族簇keyPath",
+        },
+    ];
 }
 
 @end
