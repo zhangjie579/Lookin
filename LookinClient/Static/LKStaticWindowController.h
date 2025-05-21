@@ -17,4 +17,7 @@
 
 - (void)popupAllInspectableAppsWithSource:(MenuPopoverAppsListControllerEventSource)source;
 
+/// 是否刷新中
+- (BOOL)isReloading;
+
 @end

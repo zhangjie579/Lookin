@@ -556,4 +556,9 @@
     AlertError(error, self.window);
 }
 
+/// 是否刷新中
+- (BOOL)isReloading {
+    return self.isFetchingHierarchy || self.isFetchingDetails;
+}
+
 @end

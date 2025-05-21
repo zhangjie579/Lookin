@@ -12,6 +12,8 @@
 #import "LKHierarchyDataSource.h"
 #import "LKDashboardViewController.h"
 #import "LookinHierarchyInfo.h"
+#import "LKNavigationManager.h"
+#import "LKStaticWindowController.h"
 
 @interface KcDashboardAttributeSearchKeyPathView () <NSTextFieldDelegate, NSMenuDelegate>
 
@@ -100,9 +102,18 @@
     return 1;
 }
 
-#pragma mark - <NSTextViewDelegate>
+#pragma mark - <NSTextFieldDelegate>
 
 - (void)controlTextDidEndEditing:(NSNotification *)notification {
+    // 点击刷新的时候可能会走这里, 这种情况下应该过滤掉
+    LKStaticWindowController *staticWc = [LKNavigationManager sharedInstance].staticWindowController;
+    
+    bool isReloading = [staticWc isReloading];
+    
+    if (isReloading) {
+        return;
+    }
+    
     NSTextField *editingTextField = notification.object;
     
     if (editingTextField.stringValue.length <= 0) {
