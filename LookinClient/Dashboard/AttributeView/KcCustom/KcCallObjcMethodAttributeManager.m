@@ -16,7 +16,7 @@
 /// 执行对象方法
 - (RACSignal *)evalObjcMethodWithItem:(NSMenuItem *)item targetDisplayItem:(LookinDisplayItem *)targetDisplayItem {
     NSDictionary<NSString *, id> *objcMethod = item.representedObject[@"method"];
-    
+
     return [KcCallObjcMethodAttributeManager evalObjcMethod:objcMethod targetDisplayItem:targetDisplayItem];
 }
 
@@ -26,10 +26,10 @@
     if (!targetDisplayItem) {
         return [RACSignal error:[[NSError alloc] init]];;
     }
-    
+
     BOOL isUIViewMethod = [objcMethod[@"isUIViewMethod"] boolValue];
     NSString *methodName = objcMethod[@"methodName"];
-    
+
     if (methodName.length <= 0) {
         NSAssert(NO, @"找不到对应的方法");
         return [RACSignal empty];
@@ -39,7 +39,7 @@
     
     if (!isUIViewMethod) {
         LookinObject *_Nullable hostViewControllerObject = targetDisplayItem.hostViewControllerObject;
-        
+
         // 有vc的用vc
         if (hostViewControllerObject) {
             searchObjc = hostViewControllerObject;
@@ -53,6 +53,38 @@
         NSString *_Nullable returnDescription = dict[@"description"];
         NSString *_Nullable errorLog = dict[@"errorLog"];
         
+        if (returnDescription.length) {
+            return returnDescription;
+        } else if (errorLog.length) {
+            return [NSString stringWithFormat:@"%@\n%@", errorLog, @"pod 'KcDebugSwift' 并且版本 >= 0.1.5"];
+        } else {
+            return @"nil";
+        }
+    }];
+}
+
++ (RACSignal *)evalObjcMethod:(NSDictionary<NSString *, id> *)objcMethod parameters:(NSArray<NSString *> *)parameters targetDisplayItem:(LookinDisplayItem *)targetDisplayItem {
+    if (!targetDisplayItem) {
+        return [RACSignal error:[[NSError alloc] init]];
+    }
+
+    BOOL isUIViewMethod = [objcMethod[@"isUIViewMethod"] boolValue];
+    NSString *methodTemplate = objcMethod[@"methodName"];
+    if (methodTemplate.length <= 0) {
+        NSAssert(NO, @"找不到对应的方法");
+        return [RACSignal empty];
+    }
+
+    LookinObject *searchObjc = targetDisplayItem.viewObject;
+    if (!isUIViewMethod && targetDisplayItem.hostViewControllerObject) {
+        searchObjc = targetDisplayItem.hostViewControllerObject;
+    }
+
+    methodTemplate = [methodTemplate stringByReplacingOccurrencesOfString:@"@Class" withString:searchObjc.rawClassName];
+    return [[LKAppsManager.sharedInstance.inspectingApp performSelectorWithTemplate:methodTemplate parameters:parameters oid:searchObjc.oid] map:^id _Nullable(NSDictionary *dict) {
+        NSString *_Nullable returnDescription = dict[@"description"];
+        NSString *_Nullable errorLog = dict[@"errorLog"];
+
         if (returnDescription.length) {
             return returnDescription;
         } else if (errorLog.length) {

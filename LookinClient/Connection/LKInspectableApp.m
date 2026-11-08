@@ -90,6 +90,27 @@
     }];
 }
 
+- (RACSignal *)performSelectorWithTemplate:(NSString *)methodTemplate parameters:(NSArray<NSString *> *)parameters oid:(unsigned long)oid {
+    if (!methodTemplate.length || !parameters) {
+        return [RACSignal error:LookinErr_Inner];
+    }
+
+    NSDictionary *param = @{
+        @"methodTemplate": methodTemplate,
+        @"parameters": parameters,
+        @"oid": @(oid),
+    };
+    return [[self _requestWithType:LookinRequestTypePerformSelector data:param] map:^id _Nullable(NSDictionary * _Nullable value) {
+        if ([value[@"description"] isEqualToString:LookinStringFlag_VoidReturn]) {
+            NSMutableDictionary *newValue = [value mutableCopy];
+            newValue[@"description"] = NSLocalizedString(@"The method was invoked successfully and no value was returned.", nil);
+            return newValue;
+        } else {
+            return value;
+        }
+    }];
+}
+
 - (RACSignal *)fetchAttrGroupListWithOid:(unsigned long)oid {
     if (!oid) {
         return [RACSignal error:LookinErr_Inner];

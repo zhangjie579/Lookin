@@ -121,10 +121,10 @@
     }
     
     NSMenuItem *item = self.methodMenu.itemArray[self.btn.tag];
-    NSDictionary<NSString *, id> *method = [self evalMethodStringWithItem:item keyPath:self.textField.stringValue];
+    NSDictionary<NSString *, id> *method = item.representedObject[@"method"];
     
     @weakify(self);
-    [[KcCallObjcMethodAttributeManager evalObjcMethod:method targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
+    [[KcCallObjcMethodAttributeManager evalObjcMethod:method parameters:@[self.textField.stringValue] targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
         @strongify(self);
         
         self.textView.string = message ?: @"";
@@ -156,10 +156,10 @@
     [self updateTitleWithMenuItem:item];
     
     if (self.textField.stringValue.length) {
-        NSDictionary<NSString *, id> *method = [self evalMethodStringWithItem:item keyPath:self.textField.stringValue];
+        NSDictionary<NSString *, id> *method = item.representedObject[@"method"];
         
         @weakify(self);
-        [[KcCallObjcMethodAttributeManager evalObjcMethod:method targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
+        [[KcCallObjcMethodAttributeManager evalObjcMethod:method parameters:@[self.textField.stringValue] targetDisplayItem:self.attribute.targetDisplayItem] subscribeNext:^(NSString * _Nullable message) {
             @strongify(self);
             
             self.textView.string = message ?: @"";

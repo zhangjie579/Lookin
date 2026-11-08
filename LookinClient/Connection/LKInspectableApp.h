@@ -44,6 +44,10 @@
 ///   - oid: console选中当前对象的address
 - (RACSignal *)performSelectorWithText:(NSString *)text oid:(unsigned long)oid;
 
+/// 执行方法模板。模板中的 %@ 占位符会由 LookinServer 在方法结构解析后设置，
+/// 因此参数内容不会被当作 Objective-C 方法文本再次解析。
+- (RACSignal *)performSelectorWithTemplate:(NSString *)methodTemplate parameters:(NSArray<NSString *> *)parameters oid:(unsigned long)oid;
+
 /// 获取某个 imageView 的 image 对象，oid 是 imageView 的 oid
 - (RACSignal *)fetchImageWithImageViewOid:(unsigned long)oid;
 
