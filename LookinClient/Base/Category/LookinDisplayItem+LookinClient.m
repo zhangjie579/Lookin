@@ -101,6 +101,54 @@
     return CGRectMake(x, y, width, height);
 }
 
+- (BOOL)isPassiveFullScreenLayerWithScreenSize:(CGSize)screenSize {
+    // 用户自定义的虚拟图层没有对应的真实 view，不参与判定
+    if (self.customInfo) {
+        return NO;
+    }
+    if (screenSize.width <= 0 || screenSize.height <= 0 || ![self hasValidFrameToRoot]) {
+        return NO;
+    }
+
+    // 1) 铺满全屏：与屏幕的重叠面积至少占 95%。
+    //    用「重叠面积」而不是直接比较 frame，是为了兼容起点略有偏移（例如为了覆盖状态栏而把 y 设为 -20）
+    //    或尺寸略大于屏幕的 overlay。
+    CGRect screenRect = CGRectMake(0, 0, screenSize.width, screenSize.height);
+    CGRect frameToRoot = [self calculateFrameToRoot];
+    CGRect intersection = CGRectIntersection(frameToRoot, screenRect);
+    if (CGRectIsNull(intersection) || CGRectIsEmpty(intersection)) {
+        return NO;
+    }
+    CGFloat screenArea = screenRect.size.width * screenRect.size.height;
+    CGFloat coveredArea = intersection.size.width * intersection.size.height;
+    if (coveredArea < screenArea * 0.95) {
+        return NO;
+    }
+
+    // 2) 透明：没有自己的背景色。backgroundColor 为 nil 时等价于 clearColor。
+    //    alpha（layer.opacity）单独为 0 的图层本来就属于 inHiddenHierarchy，这里不需要再判断。
+    if (self.backgroundColor && self.backgroundColor.alphaComponent > 0.01) {
+        return NO;
+    }
+
+    // 3) 不响应用户操作：iOS 端上报的 eventHandlers 包含手势识别器和 UIControl 的 target-action。
+    //    只要有任何一种，就说明该图层会消费触摸事件，不能屏蔽。
+    if (self.eventHandlers.count > 0) {
+        return NO;
+    }
+    //    兜底：控件类即使当前没挂 target / gesture，也仍然具备接收事件的语义（例如可点击态、滚动）。
+    static NSSet<NSString *> *interactiveBaseClasses;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        interactiveBaseClasses = [NSSet setWithObjects:@"UIControl", @"UIScrollView", nil];
+    });
+    if ([self itemIsKindOfClassesWithNames:interactiveBaseClasses]) {
+        return NO;
+    }
+
+    return YES;
+}
+
 - (BOOL)isMatchedWithSearchString:(NSString *)string {
     if (string.length == 0) {
         NSAssert(NO, @"");

@@ -23,6 +23,7 @@ const CGFloat LKInitialPreviewScale = 0.27;
 static NSString * const Key_PreviousClientVersion = @"preVer";
 static NSString * const Key_ShowOutline = @"showOutline";
 static NSString * const Key_ShowHiddenItems = @"showHiddenItems";
+static NSString * const Key_IgnorePassiveFullScreenLayers = @"ignorePassiveFullScreenLayers";
 static NSString * const Key_EnableReport = @"enableReport";
 static NSString * const Key_RgbaFormat = @"egbaFormat";
 static NSString * const Key_ZInterspace = @"zInterspace_v095";
@@ -93,6 +94,15 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
         }
         [self.showHiddenItems subscribe:self action:@selector(_handleShowHiddenItemsChange:) relatedObject:nil];
         
+        NSNumber *obj_ignorePassiveFullScreenLayers = [userDefaults objectForKey:Key_IgnorePassiveFullScreenLayers];
+        if (obj_ignorePassiveFullScreenLayers != nil) {
+            _ignorePassiveFullScreenLayers = [LookinBOOLMsgAttribute attributeWithBOOL:obj_ignorePassiveFullScreenLayers.boolValue];
+        } else {
+            _ignorePassiveFullScreenLayers = [LookinBOOLMsgAttribute attributeWithBOOL:YES];
+            [userDefaults setObject:@(YES) forKey:Key_IgnorePassiveFullScreenLayers];
+        }
+        [self.ignorePassiveFullScreenLayers subscribe:self action:@selector(_handleIgnorePassiveFullScreenLayersChange:) relatedObject:nil];
+
         NSNumber *obj_enableReport = [userDefaults objectForKey:Key_EnableReport];
         if (obj_enableReport != nil) {
             _enableReport = [obj_enableReport boolValue];
@@ -214,6 +224,12 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
 - (void)_handleShowHiddenItemsChange:(LookinMsgActionParams *)param {
     if (self.shouldStoreToLocal) {
         [[NSUserDefaults standardUserDefaults] setObject:@(param.boolValue) forKey:Key_ShowHiddenItems];
+    }
+}
+
+- (void)_handleIgnorePassiveFullScreenLayersChange:(LookinMsgActionParams *)param {
+    if (self.shouldStoreToLocal) {
+        [[NSUserDefaults standardUserDefaults] setObject:@(param.boolValue) forKey:Key_IgnorePassiveFullScreenLayers];
     }
 }
 
@@ -490,6 +506,7 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
     [MSACAnalytics trackEvent:@"Preference" withProperties:@{
         @"DoubleClick": [NSString stringWithFormat:@"%@", @(self.doubleClickBehavior)],
         @"ShowHidden": [NSString stringWithFormat:@"%@", @(self.showHiddenItems.currentBOOLValue)],
+        @"IgnorePassiveLayers": [NSString stringWithFormat:@"%@", @(self.ignorePassiveFullScreenLayers.currentBOOLValue)],
         @"RGBA": [NSString stringWithFormat:@"%@", @(self.rgbaFormat)],
         @"FreeRotation": [NSString stringWithFormat:@"%@", @(self.freeRotation.currentBOOLValue)],
         @"FastMode": [NSString stringWithFormat:@"%@", @(self.fastMode.currentBOOLValue)]

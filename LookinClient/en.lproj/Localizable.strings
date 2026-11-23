@@ -35,6 +35,8 @@
 
 "Show layer outline" = "Show layer outline";
 "Show hidden UIView and CALayer" = "Show hidden UIView and CALayer";
+"Skip inactive full-screen layers" = "Skip inactive full-screen layers";
+"Skip inactive full-screen layers tip" = "Transparent, full-screen views and windows without any gesture or event handler no longer intercept clicks in the preview; clicks pass through to the layers below. They stay visible and can still be selected in the hierarchy list.";
 "Item separation" = "Item separation";
 "More…" = "More…";
 

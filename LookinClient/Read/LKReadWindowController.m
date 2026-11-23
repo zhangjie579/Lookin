@@ -104,7 +104,7 @@
     NSPopover *popover = [[NSPopover alloc] init];
     popover.behavior = NSPopoverBehaviorTransient;
     popover.animates = NO;
-    popover.contentSize = NSMakeSize(IsEnglish ? 270 : 350, 200);
+    popover.contentSize = NSMakeSize(IsEnglish ? 270 : 350, 230);
     popover.contentViewController = [[LKMenuPopoverSettingController alloc] initWithPreferenceManager:self.preferenceManager];
     [popover showRelativeToRect:NSMakeRect(0, 0, button.bounds.size.width, button.bounds.size.height) ofView:button preferredEdge:NSRectEdgeMaxY];
 }

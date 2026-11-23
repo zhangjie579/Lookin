@@ -33,6 +33,22 @@ NS_ASSUME_NONNULL_BEGIN
 /// 当 hasValidFrameToRoot 返回 NO 时，该方法返回的值无意义
 - (CGRect)calculateFrameToRoot;
 
+/**
+ 判断该图层是否为「不响应用户操作、透明、铺满全屏」的次要 view / window。
+
+ 这类图层通常是业务方为了做浮层、埋点、遮罩等而额外加上的容器，或者是一个非 keyWindow，
+ 它们本身不接受触摸，却因为铺满整个屏幕而抢占了 preview 里的点击命中，导致用户选不中真正想看的图层。
+
+ 满足以下全部条件才会返回 YES：
+ - 不是用户自定义的虚拟图层（customInfo）
+ - 与屏幕的重叠面积不低于 95%（铺满全屏）
+ - backgroundColor 为 nil 或 alpha 接近 0（透明）
+ - 没有任何手势识别器和 UIControl target-action，也不是天生可交互的控件类（不响应用户操作）
+
+ @note 该方法只用于 preview 的点击命中过滤，不会影响图层在 hierarchy 列表中的显示与选中。
+ */
+- (BOOL)isPassiveFullScreenLayerWithScreenSize:(CGSize)screenSize;
+
 /// 在 string 这个搜索词下，如果该 displayItem 应该被搜索到，则该方法返回 YES。
 /// string 字段不能为 nil 或空字符串
 - (BOOL)isMatchedWithSearchString:(NSString *)string;

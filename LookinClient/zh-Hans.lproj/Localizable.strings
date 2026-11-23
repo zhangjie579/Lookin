@@ -37,6 +37,8 @@
 
 "Show layer outline" = "显示图层边框";
 "Show hidden UIView and CALayer" = "显示 hidden 为 YES 或 opacity 为 0 的图层图像";
+"Skip inactive full-screen layers" = "跳过不响应交互的全屏透明图层";
+"Skip inactive full-screen layers tip" = "透明、铺满全屏且没有任何手势或事件处理的 view / window 不再拦截 preview 里的点击，点击会穿透到下方图层。这些图层仍会显示，也仍可在左侧列表中选中。";
 "Item separation" = "图层纵向间距";
 "More…" = "更多偏好设置…";
 

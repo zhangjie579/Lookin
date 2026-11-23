@@ -60,6 +60,11 @@ typedef NS_ENUM(NSInteger, LookinMeasureState) {
 
 @property(nonatomic, strong, readonly) LookinBOOLMsgAttribute *showHiddenItems;
 
+/// 在 preview 点击选中时，跳过「不响应用户操作 + 透明 + 铺满全屏」的次要 view / window，
+/// 让点击穿透到下面真正可交互的图层。默认为 YES。
+/// 被跳过的图层仍然会显示在 preview 里，也仍然可以从左侧 hierarchy 列表中选中。
+@property(nonatomic, strong, readonly) LookinBOOLMsgAttribute *ignorePassiveFullScreenLayers;
+
 // 范围是 0 ～ 1
 @property(nonatomic, strong, readonly) LookinDoubleMsgAttribute *zInterspace;
 

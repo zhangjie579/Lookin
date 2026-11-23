@@ -17,6 +17,7 @@
 
 @property(nonatomic, strong) NSButton *enableOutlineButton;
 @property(nonatomic, strong) NSButton *showInvisiblesButton;
+@property(nonatomic, strong) NSButton *ignorePassiveLayersButton;
 
 @property(nonatomic, strong) NSSlider *spaceSlider;
 @property(nonatomic, strong) LKLabel *spaceSliderLabel;
@@ -57,6 +58,20 @@
             self.showInvisiblesButton.state = NSControlStateValueOff;
         }
         
+        self.ignorePassiveLayersButton = [NSButton new];
+        self.ignorePassiveLayersButton.font = NSFontMake(14);
+        self.ignorePassiveLayersButton.title = NSLocalizedString(@"Skip inactive full-screen layers", nil);
+        self.ignorePassiveLayersButton.toolTip = NSLocalizedString(@"Skip inactive full-screen layers tip", nil);
+        [self.ignorePassiveLayersButton setButtonType:NSButtonTypeSwitch];
+        self.ignorePassiveLayersButton.target = self;
+        self.ignorePassiveLayersButton.action = @selector(_handleIgnorePassiveLayersControl);
+        [self.view addSubview:self.ignorePassiveLayersButton];
+        if (manager.ignorePassiveFullScreenLayers.currentBOOLValue) {
+            self.ignorePassiveLayersButton.state = NSControlStateValueOn;
+        } else {
+            self.ignorePassiveLayersButton.state = NSControlStateValueOff;
+        }
+
         self.spaceSlider = [NSSlider new];
         self.spaceSlider.minValue = LookinPreviewMinZInterspace;
         self.spaceSlider.maxValue = LookinPreviewMaxZInterspace;
@@ -82,8 +97,9 @@
     
     $(self.enableOutlineButton).x(15).toRight(0).height(24).y(15);
     $(self.showInvisiblesButton).x(15).toRight(0).height(24).y(self.enableOutlineButton.$maxY + 6);
+    $(self.ignorePassiveLayersButton).x(15).toRight(0).height(24).y(self.showInvisiblesButton.$maxY + 6);
 
-    $(self.spaceSlider).x(15).toRight(15).height(26).y(self.showInvisiblesButton.$maxY + 22);
+    $(self.spaceSlider).x(15).toRight(15).height(26).y(self.ignorePassiveLayersButton.$maxY + 22);
     $(self.spaceSliderLabel).sizeToFit.x(self.spaceSlider.$x + 3).y(self.spaceSlider.$maxY);
     
     $(self.preferenceButton).width(130).horAlign.bottom(4);
@@ -103,6 +119,11 @@
     } else {
         [self.manager.showHiddenItems setBOOLValue:NO ignoreSubscriber:nil];
     }
+}
+
+- (void)_handleIgnorePassiveLayersControl {
+    BOOL shouldIgnore = (self.ignorePassiveLayersButton.state == NSControlStateValueOn);
+    [self.manager.ignorePassiveFullScreenLayers setBOOLValue:shouldIgnore ignoreSubscriber:nil];
 }
 
 - (void)_handleSpaceSlider:(NSSlider *)slider {

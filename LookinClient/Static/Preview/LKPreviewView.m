@@ -11,7 +11,9 @@
 #import "LKPreviewView.h"
 #import "LKDisplayItemNode.h"
 #import "LookinDisplayItem.h"
+#import "LookinDisplayItem+LookinClient.h"
 #import "LKHierarchyDataSource.h"
+#import "LKPreferenceManager.h"
 
 const CGFloat LookinPreviewMinScale = 0;
 const CGFloat LookinPreviewMaxScale = 1;
@@ -32,6 +34,10 @@ const CGFloat LookinPreviewMaxZInterspace = 1;
 
 @property(nonatomic, copy) NSArray<LookinDisplayItem *> *flatDisplayItems;
 @property(nonatomic, strong) NSMutableArray<LKDisplayItemNode *> *displayItemNodes;
+
+/// 当前 preview 里被判定为「不响应交互 + 透明 + 铺满全屏」的图层。
+/// 只在渲染、屏幕尺寸或 frame 变化时重算，避免每次 hover 都重复做几何计算。
+@property(nonatomic, strong) NSSet<LookinDisplayItem *> *passiveFullScreenLayers;
 
 @end
 
@@ -97,6 +103,8 @@ const CGFloat LookinPreviewMaxZInterspace = 1;
     [self.displayItemNodes enumerateObjectsUsingBlock:^(LKDisplayItemNode * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         obj.screenSize = appScreenSize;
     }];
+
+    [self _updatePassiveFullScreenLayers];
 }
 
 - (void)renderWithDisplayItems:(NSArray<LookinDisplayItem *> *)items discardCache:(BOOL)discardCache {
@@ -145,11 +153,24 @@ const CGFloat LookinPreviewMaxZInterspace = 1;
  重新计算每个 item 的 zIndex，并依 zIndex 设置对应的图层在 z 轴上的 translation。同时根据 fold 等属性来显示或隐藏图层。
  */
 - (void)updateZPosition {
+    // frame / 展开状态变化都会走到这里，顺带刷新被动图层集合
+    [self _updatePassiveFullScreenLayers];
+
     [self.flatDisplayItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         [self _updateZIndexForItem:obj];
     }];
     
     [self _updateZPositionByZIndex];
+}
+
+- (void)_updatePassiveFullScreenLayers {
+    NSMutableSet<LookinDisplayItem *> *result = [NSMutableSet set];
+    [self.flatDisplayItems enumerateObjectsUsingBlock:^(LookinDisplayItem * _Nonnull item, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([item isPassiveFullScreenLayerWithScreenSize:self.appScreenSize]) {
+            [result addObject:item];
+        }
+    }];
+    self.passiveFullScreenLayers = result.copy;
 }
 
 - (void)_updateZPositionByZIndex {
@@ -272,18 +293,47 @@ const CGFloat LookinPreviewMaxZInterspace = 1;
     self.leftLightNode.position = leftPos;
 }
 
+/**
+ 返回 point 处应当被选中的图层。
+
+ 默认只取离用户最近的那个命中节点。开启「忽略不响应交互的全屏透明图层」后，改为取回所有命中结果
+ （SceneKit 已经按由近到远排好序），依次跳过被动图层，把点击「穿透」到下面真正响应交互的图层上。
+
+ 如果某个位置下所有命中图层都是被动图层，则仍然返回最近的那一个，避免用户彻底无法在 preview 里选中它
+ （此时也可以从左侧 hierarchy 列表选中，或者到设置里关掉该开关）。
+
+ @note 单击、双击、右键、hover、测距都走这里，因此只需要在一处做过滤。
+ */
 - (LookinDisplayItem *)displayItemAtPoint:(CGPoint)point {
-    NSArray *hitResults = [self hitTest:point options:@{SCNHitTestOptionCategoryBitMask:@(LookinPreviewBitMask_Selectable),
-                                                        SCNHitTestOptionSearchMode: @(SCNHitTestSearchModeClosest),
-                                                        SCNHitTestIgnoreHiddenNodesKey:@(NO)}];
-    if ([hitResults count] > 0) {
-        SCNHitTestResult *result = [hitResults objectAtIndex:0];
-        LKDisplayItemNode *targetNode = (LKDisplayItemNode *)result.node.parentNode;
-        NSAssert([targetNode isKindOfClass:[LKDisplayItemNode class]], @"");
-        return targetNode.displayItem;
-    } else {
+    // 没有需要跳过的图层时保持原来的 closest 命中方式，避免 hover 时做全量射线检测
+    BOOL shouldSkipPassiveLayers = self.preferenceManager.ignorePassiveFullScreenLayers.currentBOOLValue && self.passiveFullScreenLayers.count > 0;
+    NSArray<SCNHitTestResult *> *hitResults = [self hitTest:point options:@{SCNHitTestOptionCategoryBitMask:@(LookinPreviewBitMask_Selectable),
+                                                                            SCNHitTestOptionSearchMode: @(shouldSkipPassiveLayers ? SCNHitTestSearchModeAll : SCNHitTestSearchModeClosest),
+                                                                            SCNHitTestIgnoreHiddenNodesKey:@(NO)}];
+    if (hitResults.count == 0) {
         return nil;
     }
+
+    LookinDisplayItem *fallbackItem = nil;
+    for (SCNHitTestResult *result in hitResults) {
+        SCNNode *parentNode = result.node.parentNode;
+        if (![parentNode isKindOfClass:[LKDisplayItemNode class]]) {
+            continue;
+        }
+        LookinDisplayItem *item = ((LKDisplayItemNode *)parentNode).displayItem;
+        if (!item) {
+            continue;
+        }
+        if (!fallbackItem) {
+            fallbackItem = item;
+        }
+        if (shouldSkipPassiveLayers && [self.passiveFullScreenLayers containsObject:item]) {
+            continue;
+        }
+        return item;
+    }
+    // 全是被动图层时退化为原有行为，保证没有任何图层会因此变得不可选中
+    return fallbackItem;
 }
 
 - (void)setRotation:(CGPoint)rotation animated:(BOOL)animated {
