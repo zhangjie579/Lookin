@@ -880,11 +880,13 @@
 #if TARGET_OS_IPHONE
     [self unpack:[UIView class] do:^(UIView *view, BOOL *stop) {
 #elif TARGET_OS_MAC
-    [self unpack:[NSControl class] do:^(NSControl *view, BOOL *stop) {
+    [self unpack:[NSView class] do:^(NSView *view, BOOL *stop) {
 #endif
-        CGFloat width = CGRectGetWidth(view.bounds);
-        CGFloat height = [view sizeThatFits:CGSizeMake(width, CGFLOAT_MAX)].height;
-        ShortCocoaMake(view).height(height);
+        if ([view respondsToSelector:@selector(sizeThatFits:)]) {
+            CGFloat width = CGRectGetWidth(view.bounds);
+            CGFloat height = [(id)view sizeThatFits:CGSizeMake(width, CGFLOAT_MAX)].height;
+            ShortCocoaMake(view).height(height);
+        }
     }];
     return self;
 }

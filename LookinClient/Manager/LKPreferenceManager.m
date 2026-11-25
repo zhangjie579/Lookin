@@ -426,6 +426,8 @@ static NSString * const Key_ReceivingConfigTime_Class = @"ConfigTime_Class";
                                                         LookinAttrSec_UIStackView_Alignment,
                                                         LookinAttrSec_UIStackView_Distribution,
                                                         LookinAttrSec_UIStackView_Spacing,
+                                                        LookinAttrSec_UIStackView_BaselineRelativeArrangement,
+                                                        LookinAttrSec_UIStackView_LayoutMarginsRelativeArrangement,
                                                         
                                                         LookinAttrSec_UIVisualEffectView_Style,
                                                         LookinAttrSec_UIVisualEffectView_QMUIForegroundColor,
